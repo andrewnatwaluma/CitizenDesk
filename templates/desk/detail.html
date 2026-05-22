@@ -1,0 +1,242 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Report Card with Status Color -->
+    <div class="rounded-xl shadow-lg overflow-hidden mb-6
+        {% if report.status == 'RESOLVED' %}bg-green-50 border-l-4 border-green-500
+        {% elif report.status == 'REJECTED' %}bg-red-50 border-l-4 border-red-500
+        {% elif report.status == 'IN_PROGRESS' %}bg-blue-50 border-l-4 border-blue-500
+        {% elif report.status == 'REVIEW' %}bg-yellow-50 border-l-4 border-yellow-500
+        {% else %}bg-gray-50 border-l-4 border-gray-500{% endif %}">
+        
+        <div class="px-4 py-4 md:px-6 md:py-4">
+            <div class="flex items-center space-x-2 md:space-x-3 mb-3">
+                {% if report.citizen.profile.profile_picture %}
+                    <img src="{{ report.citizen.profile.profile_picture.url }}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover">
+                {% else %}
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-yellow-500 to-black rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base">
+                        {{ report.citizen.first_name|first|upper }}{{ report.citizen.last_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div>
+                    <a href="{% url 'public_profile' report.citizen.id %}" class="font-semibold text-gray-800 hover:text-yellow-600 text-sm md:text-base">
+                        {{ report.citizen.first_name }} {{ report.citizen.last_name }}
+                    </a>
+                    <p class="text-xs text-gray-500">@{{ report.citizen.username }} • {{ report.created_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-between items-start gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs md:text-sm text-gray-500">📍 {{ report.location }}</span>
+                    {% if report.latitude and report.longitude %}
+                        <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}" 
+                           target="_blank" class="text-xs text-blue-500 hover:underline">Map</a>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-2">
+                    {% if report.privacy == 'PRIVATE' %}
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">🔒 Private</span>
+                    {% else %}
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">🌍 Public</span>
+                    {% endif %}
+                    <span class="text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap
+                        {% if report.status == 'RECEIVED' %}bg-gray-200 text-gray-700
+                        {% elif report.status == 'REVIEW' %}bg-yellow-100 text-yellow-700
+                        {% elif report.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-700
+                        {% elif report.status == 'RESOLVED' %}bg-green-100 text-green-700
+                        {% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ report.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800 mt-3">{{ report.title }}</h1>
+        </div>
+        
+        <div class="px-4 py-4 md:px-6 md:py-4">
+            <h3 class="font-semibold text-gray-700 mb-2 text-sm md:text-base">Description</h3>
+            <p class="text-gray-600 whitespace-pre-wrap text-sm md:text-base">{{ report.description }}</p>
+        </div>
+        
+        {% if photos %}
+        <div class="px-4 py-4 md:px-6 md:py-4 border-t border-gray-200">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
+                {% for photo in photos %}
+                    <div class="border rounded-lg overflow-hidden">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" class="w-full h-32 md:h-48 object-cover">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if report.admin_note and user.is_staff %}
+        <div class="mx-4 mb-4 md:mx-6 md:mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p class="text-sm font-semibold text-blue-700">📝 Admin Note:</p>
+            <p class="text-sm text-blue-600">{{ report.admin_note }}</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Reactions Section -->
+    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
+        <h3 class="font-bold text-base md:text-lg mb-3 md:mb-4">React to this Report</h3>
+        <div class="flex flex-wrap gap-2 md:gap-4">
+            <form method="POST" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="reaction" value="ACKNOWLEDGED">
+                <button type="submit" class="flex items-center space-x-1 md:space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg transition text-sm md:text-base
+                    {% if user_reaction.reaction_type == 'ACKNOWLEDGED' %}bg-green-500 text-white
+                    {% else %}bg-gray-100 hover:bg-green-100 text-gray-700{% endif %}">
+                    <span class="text-base md:text-xl">✅</span>
+                    <span>Acknowledged</span>
+                    <span class="ml-1 text-xs md:text-sm">({{ reactions.ACKNOWLEDGED }})</span>
+                </button>
+            </form>
+            
+            <form method="POST" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="reaction" value="ESCALATED">
+                <button type="submit" class="flex items-center space-x-1 md:space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg transition text-sm md:text-base
+                    {% if user_reaction.reaction_type == 'ESCALATED' %}bg-orange-500 text-white
+                    {% else %}bg-gray-100 hover:bg-orange-100 text-gray-700{% endif %}">
+                    <span class="text-base md:text-xl">⚠️</span>
+                    <span>Escalated</span>
+                    <span class="ml-1 text-xs md:text-sm">({{ reactions.ESCALATED }})</span>
+                </button>
+            </form>
+            
+            <form method="POST" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="reaction" value="RESOLVED">
+                <button type="submit" class="flex items-center space-x-1 md:space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg transition text-sm md:text-base
+                    {% if user_reaction.reaction_type == 'RESOLVED' %}bg-black text-white
+                    {% else %}bg-gray-100 hover:bg-gray-200 text-gray-700{% endif %}">
+                    <span class="text-base md:text-xl">✔️</span>
+                    <span>Resolved</span>
+                    <span class="ml-1 text-xs md:text-sm">({{ reactions.RESOLVED }})</span>
+                </button>
+            </form>
+        </div>
+        {% if not user.is_authenticated and 'ministry_id' not in request.session %}
+            <p class="text-xs md:text-sm text-gray-500 mt-3 md:mt-4"><a href="/login/" class="text-yellow-600">Login</a> to react to this report</p>
+        {% endif %}
+    </div>
+    
+    <!-- Comments Section -->
+    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <h3 class="font-bold text-base md:text-lg mb-3 md:mb-4">💬 Comments ({{ comments|length }})</h3>
+        
+        {% if not report.is_comment_locked or 'ministry_id' in request.session %}
+            {% if user.is_authenticated or 'ministry_id' in request.session %}
+            <div id="comment-form-container" class="mb-6">
+                <form method="POST" id="main-comment-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="parent_id" id="parent_id" value="">
+                    <textarea name="comment_text" id="comment_text" rows="3" class="w-full border border-gray-300 rounded-lg p-2 md:p-3 text-sm md:text-base" placeholder="Write a comment..."></textarea>
+                    <div id="reply-indicator" class="hidden text-xs md:text-sm text-yellow-600 mt-1 mb-2">
+                        Replying to <span id="replying-to-name"></span> 
+                        <button type="button" onclick="cancelReply()" class="text-red-500 ml-2">Cancel</button>
+                    </div>
+                    <button type="submit" class="mt-2 bg-black text-white px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base">Post Comment</button>
+                </form>
+            </div>
+            {% else %}
+                <p class="text-xs md:text-sm text-gray-500 mb-4"><a href="/login/" class="text-yellow-600">Login</a> to comment</p>
+            {% endif %}
+        {% else %}
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-center">
+                <p class="text-sm text-red-600">🔒 This report has been rejected. Comments are closed.</p>
+            </div>
+        {% endif %}
+        
+        <div class="space-y-3 md:space-y-4">
+            {% for comment in comments %}
+                <div class="border rounded-lg p-3 md:p-4 {% if comment.is_ministry_comment %}bg-yellow-50 border-yellow-300{% endif %}" id="comment-{{ comment.id }}">
+                    <div class="flex items-start space-x-2 md:space-x-3">
+                        {% if comment.is_ministry_comment %}
+                            <div class="w-7 h-7 md:w-8 md:h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                                🏛️
+                            </div>
+                        {% elif comment.citizen.profile.profile_picture %}
+                            <img src="{{ comment.citizen.profile.profile_picture.url }}" class="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover">
+                        {% else %}
+                            <div class="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-yellow-500 to-black rounded-full flex items-center justify-center text-white font-bold text-xs">
+                                {{ comment.citizen.first_name|first|upper }}{{ comment.citizen.last_name|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-1 md:gap-2">
+                                {% if comment.is_ministry_comment %}
+                                    <span class="font-semibold text-sm text-yellow-700">🏛️ {{ comment.ministry.name }}</span>
+                                    <span class="text-xs bg-yellow-100 px-1.5 py-0.5 rounded-full">Official Response</span>
+                                {% else %}
+                                    <a href="{% url 'public_profile' comment.citizen.id %}" class="font-semibold text-xs md:text-sm hover:text-yellow-600">
+                                        {{ comment.citizen.first_name }} {{ comment.citizen.last_name }}
+                                    </a>
+                                    <span class="text-xs text-gray-500">@{{ comment.citizen.username }}</span>
+                                {% endif %}
+                                <span class="text-xs text-gray-400">{{ comment.created_at|date:"M d, H:i" }}</span>
+                            </div>
+                            <p class="text-gray-700 mt-1 text-sm md:text-base">{{ comment.text }}</p>
+                            {% if user.is_authenticated and not report.is_comment_locked %}
+                                <button onclick="setReply('{{ comment.id }}', '{{ comment.citizen.first_name }} {{ comment.citizen.last_name }}')" class="text-xs text-yellow-600 hover:underline mt-1">
+                                    ↩️ Reply
+                                </button>
+                            {% endif %}
+                            
+                            {% if comment.replies.all %}
+                                <div class="mt-2 md:mt-3 pl-3 md:pl-4 border-l-2 border-gray-200 space-y-2 md:space-y-3">
+                                    {% for reply in comment.replies.all %}
+                                        <div class="flex items-start space-x-2">
+                                            {% if reply.citizen.profile.profile_picture %}
+                                                <img src="{{ reply.citizen.profile.profile_picture.url }}" class="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover">
+                                            {% else %}
+                                                <div class="w-5 h-5 md:w-6 md:h-6 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                                                    {{ reply.citizen.first_name|first|upper }}{{ reply.citizen.last_name|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-1">
+                                                <div class="flex flex-wrap items-center gap-1">
+                                                    <a href="{% url 'public_profile' reply.citizen.id %}" class="font-semibold text-xs hover:text-yellow-600">
+                                                        {{ reply.citizen.first_name }} {{ reply.citizen.last_name }}
+                                                    </a>
+                                                    <span class="text-xs text-gray-500">@{{ reply.citizen.username }}</span>
+                                                    <span class="text-xs text-gray-400">{{ reply.created_at|date:"M d, H:i" }}</span>
+                                                </div>
+                                                <p class="text-gray-600 text-xs md:text-sm mt-1">{{ reply.text }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-gray-500 text-center py-4 text-sm md:text-base">No comments yet. Be the first to comment.</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="mt-6 text-center">
+        <a href="/" class="text-gray-600 hover:text-yellow-600 text-sm md:text-base">← Back to Feed</a>
+    </div>
+</div>
+
+<script>
+function setReply(commentId, userName) {
+    document.getElementById('parent_id').value = commentId;
+    document.getElementById('reply-indicator').classList.remove('hidden');
+    document.getElementById('replying-to-name').innerText = userName;
+    document.getElementById('comment_text').focus();
+    document.getElementById('comment_text').placeholder = `Reply to ${userName}...`;
+}
+
+function cancelReply() {
+    document.getElementById('parent_id').value = '';
+    document.getElementById('reply-indicator').classList.add('hidden');
+    document.getElementById('comment_text').placeholder = 'Write a comment...';
+}
+</script>
+{% endblock %}

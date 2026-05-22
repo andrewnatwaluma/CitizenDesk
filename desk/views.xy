@@ -1,0 +1,208 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.http import JsonResponse
+from django.db.models import Count, Q
+from .models import Ministry, Report, Photo, Reaction, Comment
+from .forms import ReportForm
+
+def home(request):
+    """Landing page with recent reports"""
+    # Get all non-security reports (or security shown only to logged-in admins)
+    if request.user.is_staff:
+        reports = Report.objects.all()
+    else:
+        reports = Report.objects.filter(is_security_related=False)
+    
+    # Filter by ministry if selected
+    ministry_id = request.GET.get('ministry')
+    if ministry_id:
+        reports = reports.filter(ministry_id=ministry_id)
+    
+    # Filter by status
+    status = request.GET.get('status')
+    if status:
+        reports = reports.filter(status=status)
+    
+    reports = reports[:50]  # Show latest 50
+    
+    ministries = Ministry.objects.all()
+    
+    # Get reaction counts for each report
+    for report in reports:
+        report.reaction_count = report.reactions.count()
+        report.comment_count = report.comments.count()
+    
+    context = {
+        'reports': reports,
+        'ministries': ministries,
+        'selected_ministry': ministry_id,
+        'selected_status': status,
+    }
+    return render(request, 'desk/home.html', context)
+
+def submit_report(request):
+    """Citizen submits a new report/request"""
+    if request.method == 'POST':
+        form = ReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Create or get anonymous user (simplified - in production, create proper accounts)
+            # For demo, we'll use a demo citizen account or create one
+            demo_user, created = User.objects.get_or_create(
+                username='citizen_demo',
+                defaults={
+                    'email': 'demo@citizen.ug',
+                    'password': 'pbkdf2_sha256$...'  # This is simplified
+                }
+            )
+            if created:
+                demo_user.set_password('demo123')
+                demo_user.save()
+            
+            report = form.save(commit=False)
+            report.citizen = demo_user
+            report.save()
+            
+            # Handle photos
+            for i in range(1, 4):
+                photo_field = f'photo{i}'
+                if request.FILES.get(photo_field):
+                    Photo.objects.create(
+                        report=report,
+                        image=request.FILES[photo_field]
+                    )
+            
+            messages.success(request, f'Your report has been submitted! Tracking ID: #{report.id}')
+            return redirect('report_detail', report_id=report.id)
+    else:
+        form = ReportForm()
+    
+    ministries = Ministry.objects.all()
+    return render(request, 'desk/submit.html', {'form': form, 'ministries': ministries})
+
+def report_detail(request, report_id):
+    """View a single report with photos, reactions, comments"""
+    report = get_object_or_404(Report, id=report_id)
+    
+    # Security check - hide security reports from non-staff
+    if report.is_security_related and not request.user.is_staff:
+        messages.error(request, 'This report is confidential.')
+        return redirect('home')
+    
+    # Handle reaction (AJAX or POST)
+    if request.method == 'POST' and 'reaction' in request.POST and request.user.is_authenticated:
+        reaction_type = request.POST.get('reaction')
+        Reaction.objects.update_or_create(
+            report=report,
+            citizen=request.user,
+            defaults={'reaction_type': reaction_type}
+        )
+        return redirect('report_detail', report_id=report.id)
+    
+    # Handle comment
+    if request.method == 'POST' and 'comment_text' in request.POST and request.user.is_authenticated:
+        comment_text = request.POST.get('comment_text')
+        if comment_text:
+            Comment.objects.create(
+                report=report,
+                citizen=request.user,
+                text=comment_text
+            )
+            messages.success(request, 'Comment added!')
+            return redirect('report_detail', report_id=report.id)
+    
+    # Get reaction counts
+    reactions = {
+        'SUPPORT': report.reactions.filter(reaction_type='SUPPORT').count(),
+        'SAD': report.reactions.filter(reaction_type='SAD').count(),
+        'CLAP': report.reactions.filter(reaction_type='CLAP').count(),
+    }
+    
+    # Get user's reaction if logged in
+    user_reaction = None
+    if request.user.is_authenticated:
+        user_reaction = report.reactions.filter(citizen=request.user).first()
+    
+    comments = report.comments.all()
+    photos = report.photos.all()
+    
+    context = {
+        'report': report,
+        'photos': photos,
+        'reactions': reactions,
+        'user_reaction': user_reaction,
+        'comments': comments,
+    }
+    return render(request, 'desk/detail.html', context)
+
+@login_required
+def add_reaction(request, report_id):
+    """AJAX endpoint for adding reactions"""
+    if request.method == 'POST':
+        report = get_object_or_404(Report, id=report_id)
+        reaction_type = request.POST.get('reaction_type')
+        reaction, created = Reaction.objects.update_or_create(
+            report=report,
+            citizen=request.user,
+            defaults={'reaction_type': reaction_type}
+        )
+        return JsonResponse({'success': True, 'count': report.reactions.count()})
+    return JsonResponse({'success': False})
+
+@login_required
+def ministry_dashboard(request):
+    """Dashboard for ministry admins to manage their reports"""
+    if not request.user.is_staff:
+        messages.error(request, 'Access denied. Ministry admin access only.')
+        return redirect('home')
+    
+    # Get ministries that this admin manages (simplified - all for superuser)
+    if request.user.is_superuser:
+        ministries = Ministry.objects.all()
+        reports = Report.objects.all()
+    else:
+        # For non-superuser staff, assign to specific ministry via user profile
+        # Simplified: show all reports for demo
+        reports = Report.objects.all()
+        ministries = Ministry.objects.all()
+    
+    # Filters
+    ministry_id = request.GET.get('ministry')
+    if ministry_id:
+        reports = reports.filter(ministry_id=ministry_id)
+    
+    status_filter = request.GET.get('status')
+    if status_filter:
+        reports = reports.filter(status=status_filter)
+    
+    context = {
+        'reports': reports,
+        'ministries': ministries,
+        'selected_ministry': ministry_id,
+        'selected_status': status_filter,
+        'status_choices': Report.STATUS_CHOICES,
+    }
+    return render(request, 'desk/ministry_dashboard.html', context)
+
+@login_required
+def update_status(request, report_id):
+    """Update report status (ministry admin only)"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    if request.method == 'POST':
+        report = get_object_or_404(Report, id=report_id)
+        new_status = request.POST.get('status')
+        admin_note = request.POST.get('admin_note', '')
+        
+        if new_status in dict(Report.STATUS_CHOICES):
+            report.status = new_status
+            if admin_note:
+                report.admin_note = admin_note
+            report.save()
+            messages.success(request, f'Report #{report.id} status updated to {report.get_status_display()}')
+    
+    return redirect('ministry_dashboard')0
+

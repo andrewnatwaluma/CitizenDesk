@@ -1,0 +1,142 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Report Card -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <!-- Header -->
+        <div class="bg-gray-50 px-6 py-4 border-b">
+            <div class="flex justify-between items-start flex-wrap gap-2">
+                <div>
+                    <span class="inline-block px-2 py-1 text-xs rounded-full 
+                        {% if report.report_type == 'REQUEST' %}bg-blue-100 text-blue-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ report.get_report_type_display }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">📍 {{ report.location }}</span>
+                </div>
+                <span class="px-3 py-1 rounded-full text-sm font-semibold
+                    {% if report.status == 'RECEIVED' %}bg-gray-200 text-gray-700
+                    {% elif report.status == 'REVIEW' %}bg-yellow-100 text-yellow-700
+                    {% elif report.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-700
+                    {% elif report.status == 'RESOLVED' %}bg-green-100 text-green-700
+                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ report.get_status_display }}
+                </span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mt-3">{{ report.title }}</h1>
+            <div class="mt-2 text-sm text-gray-500">
+                <span>📅 {{ report.created_at|date:"F d, Y" }}</span>
+                <span class="mx-2">•</span>
+                <span>🏛️ {{ report.ministry.name }}</span>
+                <span class="mx-2">•</span>
+                <span>👤 Citizen #{{ report.citizen.id }}</span>
+            </div>
+        </div>
+        
+        <!-- Description -->
+        <div class="px-6 py-4">
+            <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
+            <p class="text-gray-600 whitespace-pre-wrap">{{ report.description }}</p>
+        </div>
+        
+        <!-- Photos -->
+        {% if photos %}
+        <div class="px-6 py-4 border-t">
+            <h3 class="font-semibold text-gray-700 mb-3">📸 Attached Photos</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {% for photo in photos %}
+                    <div class="border rounded-lg overflow-hidden">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" class="w-full h-48 object-cover">
+                        {% if photo.caption %}
+                            <p class="text-xs text-gray-500 p-2">{{ photo.caption }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Admin Note -->
+        {% if report.admin_note and user.is_staff %}
+        <div class="mx-6 mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p class="text-sm font-semibold text-blue-700">📝 Admin Note:</p>
+            <p class="text-sm text-blue-600">{{ report.admin_note }}</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Reactions Section -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h3 class="font-bold text-lg mb-4">Reactions</h3>
+        <div class="flex gap-6">
+            <div class="text-center">
+                <div class="text-3xl">👍</div>
+                <div class="font-bold">{{ reactions.SUPPORT }}</div>
+                <div class="text-xs text-gray-500">Support</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl">😢</div>
+                <div class="font-bold">{{ reactions.SAD }}</div>
+                <div class="text-xs text-gray-500">Sad</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl">👏</div>
+                <div class="font-bold">{{ reactions.CLAP }}</div>
+                <div class="text-xs text-gray-500">Clap</div>
+            </div>
+        </div>
+        
+        <!-- React Button -->
+        {% if user.is_authenticated %}
+        <form method="POST" class="mt-4">
+            {% csrf_token %}
+            <select name="reaction" class="border rounded-lg px-3 py-1 text-sm">
+                <option value="SUPPORT" {% if user_reaction.reaction_type == 'SUPPORT' %}selected{% endif %}>👍 Support</option>
+                <option value="SAD" {% if user_reaction.reaction_type == 'SAD' %}selected{% endif %}>😢 Sad</option>
+                <option value="CLAP" {% if user_reaction.reaction_type == 'CLAP' %}selected{% endif %}>👏 Clap</option>
+            </select>
+            <button type="submit" class="ml-2 bg-gray-200 px-4 py-1 rounded-lg text-sm">React</button>
+        </form>
+        {% else %}
+            <p class="text-sm text-gray-500 mt-3"><a href="/admin/login/" class="text-yellow-600">Login</a> to react to this report</p>
+        {% endif %}
+    </div>
+    
+    <!-- Comments Section -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="font-bold text-lg mb-4">💬 Comments ({{ comments|length }})</h3>
+        
+        <!-- Comment Form -->
+        {% if user.is_authenticated %}
+        <form method="POST" class="mb-6">
+            {% csrf_token %}
+            <textarea name="comment_text" rows="3" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Share your thoughts..."></textarea>
+            <button type="submit" class="mt-2 bg-black text-white px-4 py-2 rounded-lg">Post Comment</button>
+        </form>
+        {% else %}
+            <p class="text-sm text-gray-500 mb-4"><a href="/admin/login/" class="text-yellow-600">Login</a> to comment</p>
+        {% endif %}
+        
+        <!-- Comments List -->
+        {% for comment in comments %}
+        <div class="border-b py-3">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="font-semibold text-sm">{{ comment.citizen.username }}</span>
+                    <span class="text-xs text-gray-500 ml-2">{{ comment.created_at|date:"M d, H:i" }}</span>
+                </div>
+            </div>
+            <p class="text-gray-700 mt-1">{{ comment.text }}</p>
+        </div>
+        {% empty %}
+            <p class="text-gray-500 text-center py-4">No comments yet. Be the first to comment.</p>
+        {% endfor %}
+    </div>
+    
+    <!-- Back Button -->
+    <div class="mt-6 text-center">
+        <a href="/" class="text-gray-600 hover:text-yellow-600">← Back to Feed</a>
+    </div>
+</div>
+{% endblock %}0
+

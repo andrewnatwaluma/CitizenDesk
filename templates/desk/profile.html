@@ -1,0 +1,116 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div class="flex items-center space-x-4">
+            {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" class="w-20 h-20 rounded-full object-cover">
+            {% else %}
+                <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-black rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                </div>
+            {% endif %}
+            <div>
+                <h1 class="text-2xl font-bold">{{ user.first_name }} {{ user.last_name }}</h1>
+                <p class="text-gray-600">@{{ user.username }}</p>
+                <p class="text-gray-500 text-sm">{{ user.email }}</p>
+                {% if profile.phone_number %}
+                    <p class="text-gray-500 text-sm">📞 {{ profile.phone_number }}</p>
+                {% endif %}
+                <p class="text-gray-400 text-xs mt-1">Joined {{ user.date_joined|date:"F d, Y" }}</p>
+                <a href="{% url 'profile_update' %}" class="inline-block mt-3 text-sm bg-yellow-500 text-white px-4 py-1 rounded-lg hover:bg-yellow-600">
+                    ✏️ Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="border-b">
+            <div class="flex">
+                <button onclick="showTab('reports')" id="tab-reports-btn" class="px-6 py-3 text-sm font-medium text-yellow-600 border-b-2 border-yellow-600">📝 My Reports</button>
+                <button onclick="showTab('comments')" id="tab-comments-btn" class="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700">💬 My Comments</button>
+                <button onclick="showTab('reactions')" id="tab-reactions-btn" class="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700">👍 My Reactions</button>
+            </div>
+        </div>
+        
+        <div id="reports-tab" class="p-6">
+            {% if user_reports %}
+                {% for report in user_reports %}
+                    <div class="border-b pb-4 mb-4 last:border-0">
+                        <div class="flex justify-between items-start">
+                            <a href="{% url 'report_detail' report.id %}" class="text-lg font-semibold text-gray-800 hover:text-yellow-600">
+                                {{ report.title }}
+                            </a>
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold
+                                {% if report.status == 'RECEIVED' %}bg-gray-200 text-gray-700
+                                {% elif report.status == 'REVIEW' %}bg-yellow-100 text-yellow-700
+                                {% elif report.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-700
+                                {% elif report.status == 'RESOLVED' %}bg-green-100 text-green-700
+                                {% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ report.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="text-gray-500 text-sm mt-1">{{ report.created_at|date:"F d, Y" }} • {{ report.ministry.name }}</p>
+                        <p class="text-gray-600 mt-2">{{ report.description|truncatewords:20 }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-500 text-center py-8">You haven't submitted any reports yet.</p>
+            {% endif %}
+        </div>
+        
+        <div id="comments-tab" class="p-6 hidden">
+            {% if user_comments %}
+                {% for comment in user_comments %}
+                    <div class="border-b pb-4 mb-4 last:border-0">
+                        <a href="{% url 'report_detail' comment.report.id %}" class="text-md font-semibold text-gray-800 hover:text-yellow-600">
+                            Re: {{ comment.report.title }}
+                        </a>
+                        <p class="text-gray-600 mt-1">{{ comment.text }}</p>
+                        <p class="text-gray-400 text-xs mt-1">{{ comment.created_at|date:"F d, Y H:i" }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-500 text-center py-8">You haven't commented on any reports yet.</p>
+            {% endif %}
+        </div>
+        
+        <div id="reactions-tab" class="p-6 hidden">
+            {% if user_reactions %}
+                {% for reaction in user_reactions %}
+                    <div class="border-b pb-4 mb-4 last:border-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">
+                                {% if reaction.reaction_type == 'SUPPORT' %}👍
+                                {% elif reaction.reaction_type == 'SAD' %}😢
+                                {% else %}👏{% endif %}
+                            </span>
+                            <a href="{% url 'report_detail' reaction.report.id %}" class="text-md font-semibold text-gray-800 hover:text-yellow-600">
+                                {{ reaction.report.title }}
+                            </a>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-1">{{ reaction.created_at|date:"F d, Y H:i" }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-500 text-center py-8">You haven't reacted to any reports yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tab) {
+    document.getElementById('reports-tab').classList.add('hidden');
+    document.getElementById('comments-tab').classList.add('hidden');
+    document.getElementById('reactions-tab').classList.add('hidden');
+    document.getElementById('tab-reports-btn').className = 'px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700';
+    document.getElementById('tab-comments-btn').className = 'px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700';
+    document.getElementById('tab-reactions-btn').className = 'px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700';
+    document.getElementById(tab + '-tab').classList.remove('hidden');
+    document.getElementById('tab-' + tab + '-btn').className = 'px-6 py-3 text-sm font-medium text-yellow-600 border-b-2 border-yellow-600';
+}
+</script>
+{% endblock %}

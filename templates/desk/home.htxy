@@ -1,0 +1,101 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-6">
+    <!-- Sidebar Filters -->
+    <div class="lg:w-1/4">
+        <div class="bg-white rounded-xl shadow-lg p-5 sticky top-24">
+            <h3 class="font-bold text-lg mb-3">📋 Filter by Ministry</h3>
+            <a href="?{% if selected_status %}status={{ selected_status }}{% endif %}" 
+               class="block py-2 px-3 rounded {% if not selected_ministry %}bg-yellow-100 text-yellow-800{% else %}hover:bg-gray-100{% endif %} mb-1">
+                All Ministries
+            </a>
+            {% for m in ministries %}
+                <a href="?ministry={{ m.id }}{% if selected_status %}&status={{ selected_status }}{% endif %}" 
+                   class="block py-2 px-3 rounded {% if selected_ministry|add:0 == m.id %}bg-yellow-100 text-yellow-800{% else %}hover:bg-gray-100{% endif %} mb-1">
+                    {{ m.name }}
+                </a>
+            {% endfor %}
+            
+            <h3 class="font-bold text-lg mt-4 mb-3">🏷️ Filter by Status</h3>
+            <a href="?{% if selected_ministry %}ministry={{ selected_ministry }}{% endif %}" 
+               class="block py-2 px-3 rounded {% if not selected_status %}bg-yellow-100 text-yellow-800{% else %}hover:bg-gray-100{% endif %} mb-1">
+                All Status
+            </a>
+            <a href="?status=RECEIVED{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}" 
+               class="block py-2 px-3 rounded {% if selected_status == 'RECEIVED' %}bg-yellow-100{% else %}hover:bg-gray-100{% endif %} mb-1">
+                📋 Received
+            </a>
+            <a href="?status=REVIEW{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}" 
+               class="block py-2 px-3 rounded {% if selected_status == 'REVIEW' %}bg-yellow-100{% else %}hover:bg-gray-100{% endif %} mb-1">
+                🔍 Under Review
+            </a>
+            <a href="?status=IN_PROGRESS{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}" 
+               class="block py-2 px-3 rounded {% if selected_status == 'IN_PROGRESS' %}bg-yellow-100{% else %}hover:bg-gray-100{% endif %} mb-1">
+                🔄 In Progress
+            </a>
+            <a href="?status=RESOLVED{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}" 
+               class="block py-2 px-3 rounded {% if selected_status == 'RESOLVED' %}bg-green-100{% else %}hover:bg-gray-100{% endif %} mb-1">
+                ✅ Resolved
+            </a>
+        </div>
+    </div>
+    
+    <!-- Reports Feed -->
+    <div class="lg:w-3/4">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold">📢 Citizen Reports & Requests</h2>
+            <p class="text-gray-600">See what your fellow Ugandans are reporting</p>
+        </div>
+        
+        {% for report in reports %}
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-5 card-hover transition">
+                <!-- Header -->
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="inline-block px-2 py-1 text-xs rounded-full 
+                            {% if report.report_type == 'REQUEST' %}bg-blue-100 text-blue-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ report.get_report_type_display }}
+                        </span>
+                        <span class="ml-2 text-sm text-gray-500">📍 {{ report.location }}</span>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                        {% if report.status == 'RECEIVED' %}bg-gray-200 text-gray-700
+                        {% elif report.status == 'REVIEW' %}bg-yellow-100 text-yellow-700
+                        {% elif report.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-700
+                        {% elif report.status == 'RESOLVED' %}bg-green-100 text-green-700
+                        {% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ report.get_status_display }}
+                    </span>
+                </div>
+                
+                <!-- Title -->
+                <a href="{% url 'report_detail' report.id %}" class="block">
+                    <h3 class="text-xl font-bold text-gray-800 hover:text-yellow-600 mb-2">{{ report.title }}</h3>
+                </a>
+                
+                <!-- Description preview -->
+                <p class="text-gray-600 mb-3">{{ report.description|truncatewords:30 }}</p>
+                
+                <!-- Ministry badge -->
+                <div class="inline-block bg-gray-100 px-3 py-1 rounded-full text-sm mb-3">
+                    🏛️ {{ report.ministry.name }}
+                </div>
+                
+                <!-- Stats -->
+                <div class="flex space-x-4 text-sm text-gray-500 border-t pt-3">
+                    <span>👍 {{ report.reaction_count }} reactions</span>
+                    <span>💬 {{ report.comment_count }} comments</span>
+                    <span>📅 {{ report.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        {% empty %}
+            <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                <p class="text-gray-500 text-lg">No reports yet. Be the first to report an issue!</p>
+                <a href="{% url 'submit_report' %}" class="inline-block mt-4 bg-black text-white px-6 py-2 rounded-lg">Submit a Report</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}0
+

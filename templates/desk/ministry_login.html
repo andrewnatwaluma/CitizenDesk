@@ -1,0 +1,38 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <div class="text-center mb-6">
+            <div class="flex justify-center space-x-2 mb-3">
+                <div class="w-10 h-10 bg-black rounded-full"></div>
+                <div class="w-10 h-10 bg-yellow-500 rounded-full"></div>
+                <div class="w-10 h-10 bg-red-600 rounded-full"></div>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Ministry Login</h1>
+            <p class="text-gray-600 text-sm mt-1">Login with your ministry credentials</p>
+        </div>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Ministry Name</label>
+                <input type="text" name="ministry_name" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                       placeholder="e.g., Ministry of Health">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Password</label>
+                <input type="password" name="password" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+            </div>
+            <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-2 rounded-lg transition">
+                🔑 Login as Ministry
+            </button>
+        </form>
+        <p class="text-center mt-4 text-sm text-gray-500">
+            <a href="/login/" class="text-yellow-600">← Citizen Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

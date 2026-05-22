@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitizenDesk 🇺🇬 | Your Voice, Government Action</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; }
+        .flag-stripes { background: linear-gradient(90deg, #000000 0%, #000000 33%, #F5A623 33%, #F5A623 66%, #D0021B 66%, #D0021B 100%); height: 5px; }
+        .card-hover:hover { transform: translateY(-2px); transition: all 0.3s ease; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="font-sans">
+    <div class="flag-stripes"></div>
+    
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="flex space-x-1">
+                    <div class="w-6 h-6 bg-black rounded"></div>
+                    <div class="w-6 h-6 bg-yellow-500 rounded"></div>
+                    <div class="w-6 h-6 bg-red-600 rounded"></div>
+                </div>
+                <a href="/" class="text-2xl font-bold text-gray-800">Citizen<span class="text-yellow-600">Desk</span></a>
+                <span class="text-xs bg-gray-200 px-2 py-1 rounded">Beta</span>
+            </div>
+            
+            <div class="flex space-x-4 mt-2 sm:mt-0">
+                <a href="/" class="text-gray-600 hover:text-yellow-600 transition">🏠 Feed</a>
+                <a href="/submit/" class="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition">📝 New Report</a>
+                {% if user.is_staff %}
+                    <a href="/dashboard/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">📊 Admin</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mx-auto px-4 mt-4">
+            {% for message in messages %}
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-2">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white mt-12 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400">🇺🇬 CitizenDesk — Empowering Ugandans to engage with government</p>
+            <p class="text-gray-500 text-sm mt-2">A prototype for the National Innovator Registry | Ministry of ICT & National Guidance</p>
+        </div>
+    </footer>
+</body>
+</html>0
+

@@ -1,0 +1,116 @@
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+class Ministry(models.Model):
+    """Government ministry or department"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        ordering = ['name']
+
+class Report(models.Model):
+    """Citizen report/request"""
+    
+    STATUS_CHOICES = [
+        ('RECEIVED', '📋 Received'),
+        ('REVIEW', '🔍 Under Review'),
+        ('IN_PROGRESS', '🔄 In Progress'),
+        ('RESOLVED', '✅ Resolved'),
+        ('REJECTED', '❌ Rejected'),
+    ]
+    
+    TYPE_CHOICES = [
+        ('REQUEST', '📝 Service Request'),
+        ('REPORT', '⚠️ Report Issue'),
+    ]
+    
+    # Basic info
+    title = models.CharField(max_length=200)
+    report_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='REPORT')
+    description = models.TextField()
+    location = models.CharField(max_length=300, help_text="e.g., Kampala, Namuwongo")
+    
+    # Relationships
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='reports')
+    citizen = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='RECEIVED')
+    status_updated_at = models.DateTimeField(auto_now=True)
+    
+    # Security flag (special handling for security reports)
+    is_security_related = models.BooleanField(default=False)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Admin notes (internal)
+    admin_note = models.TextField(blank=True, help_text="Internal notes for ministry staff")
+    
+    def __str__(self):
+        return f"{self.title} - {self.citizen.username}"
+    
+    def get_status_color(self):
+        """Return color for status badge"""
+        colors = {
+            'RECEIVED': 'gray',
+            'REVIEW': 'yellow',
+            'IN_PROGRESS': 'blue',
+            'RESOLVED': 'green',
+            'REJECTED': 'red',
+        }
+        return colors.get(self.status, 'gray')
+    
+    class Meta:
+        ordering = ['-created_at']
+
+class Photo(models.Model):
+    """Up to 3 photos per report"""
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='report_photos/%Y/%m/%d/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Photo for {self.report.title}"
+
+class Reaction(models.Model):
+    """Citizen reactions to reports (like support)"""
+    REACTION_TYPES = [
+        ('SUPPORT', '👍 Support'),
+        ('SAD', '😢 Sad'),
+        ('CLAP', '👏 Clap'),
+    ]
+    
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='reactions')
+    citizen = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reactions')
+    reaction_type = models.CharField(max_length=10, choices=REACTION_TYPES, default='SUPPORT')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['report', 'citizen']  # One reaction per citizen per report
+    
+    def __str__(self):
+        return f"{self.citizen.username} - {self.reaction_type} on {self.report.title}"
+
+class Comment(models.Model):
+    """Citizen comments on reports"""
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='comments')
+    citizen = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Comment by {self.citizen.username} on {self.report.title}"
+    
+    class Meta:
+        ordering = ['created_at']0
+

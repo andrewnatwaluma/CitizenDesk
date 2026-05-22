@@ -1,0 +1,140 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-4 md:gap-6">
+    <!-- Sidebar Filters - Mobile Collapsible -->
+    <div class="lg:w-1/4">
+        <div class="bg-white rounded-xl shadow-lg p-4 md:p-5 sticky top-20 md:top-24">
+            <h3 class="font-bold text-base md:text-lg mb-3">📋 Filters</h3>
+            
+            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Ministry</label>
+            <select onchange="window.location.href=this.value" class="w-full p-2 text-sm md:text-base border border-gray-300 rounded-lg mb-4">
+                <option value="?{% if selected_status %}status={{ selected_status }}{% endif %}">All Ministries</option>
+                {% for m in ministries %}
+                    <option value="?ministry={{ m.id }}{% if selected_status %}&status={{ selected_status }}{% endif %}" 
+                            {% if selected_ministry|add:0 == m.id %}selected{% endif %}>
+                        {{ m.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select onchange="window.location.href=this.value" class="w-full p-2 text-sm md:text-base border border-gray-300 rounded-lg">
+                <option value="?{% if selected_ministry %}ministry={{ selected_ministry }}{% endif %}">All Status</option>
+                <option value="?status=RECEIVED{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}"
+                        {% if selected_status == 'RECEIVED' %}selected{% endif %}>📋 Received</option>
+                <option value="?status=REVIEW{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}"
+                        {% if selected_status == 'REVIEW' %}selected{% endif %}>🔍 Under Review</option>
+                <option value="?status=IN_PROGRESS{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}"
+                        {% if selected_status == 'IN_PROGRESS' %}selected{% endif %}>🔄 In Progress</option>
+                <option value="?status=RESOLVED{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}"
+                        {% if selected_status == 'RESOLVED' %}selected{% endif %}>✅ Resolved</option>
+                <option value="?status=REJECTED{% if selected_ministry %}&ministry={{ selected_ministry }}{% endif %}"
+                        {% if selected_status == 'REJECTED' %}selected{% endif %}>❌ Rejected</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Reports Feed - Mobile Optimized -->
+    <div class="lg:w-3/4">
+        <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-4 md:mb-6">
+            <h2 class="text-xl md:text-2xl font-bold">📢 Citizen Reports</h2>
+            <p class="text-gray-600 text-sm md:text-base">See what your fellow Ugandans are reporting</p>
+        </div>
+        
+        {% for report in reports %}
+            <div onclick="window.location.href='{% url 'report_detail' report.id %}'" 
+                 class="rounded-xl shadow-lg mb-4 md:mb-5 card-hover transition cursor-pointer overflow-hidden
+                 {% if report.status == 'RESOLVED' %}bg-green-50 border-l-4 border-green-500
+                 {% elif report.status == 'REJECTED' %}bg-red-50 border-l-4 border-red-500
+                 {% elif report.status == 'IN_PROGRESS' %}bg-blue-50 border-l-4 border-blue-500
+                 {% elif report.status == 'REVIEW' %}bg-yellow-50 border-l-4 border-yellow-500
+                 {% else %}bg-gray-50 border-l-4 border-gray-500{% endif %}">
+                
+                <!-- Header -->
+                <div class="p-3 md:p-5 pb-2">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center space-x-2 md:space-x-3">
+                            {% if report.citizen.profile.profile_picture %}
+                                <img src="{{ report.citizen.profile.profile_picture.url }}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover">
+                            {% else %}
+                                <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-yellow-500 to-black rounded-full flex items-center justify-center text-white font-bold text-base md:text-lg">
+                                    {{ report.citizen.first_name|first|upper }}{{ report.citizen.last_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'public_profile' report.citizen.id %}" class="font-semibold text-gray-800 hover:text-yellow-600 text-sm md:text-base"
+                                   onclick="event.stopPropagation()">
+                                    {{ report.citizen.first_name }} {{ report.citizen.last_name }}
+                                </a>
+                                <p class="text-xs text-gray-500">@{{ report.citizen.username }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400">{{ report.created_at|date:"M d, Y" }}</p>
+                            <div class="flex items-center space-x-1 mt-1 justify-end">
+                                {% if report.privacy == 'PRIVATE' %}
+                                    <span class="text-xs text-purple-600">🔒</span>
+                                {% endif %}
+                                <span class="text-xs px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-full font-semibold whitespace-nowrap
+                                    {% if report.status == 'RECEIVED' %}bg-gray-200 text-gray-700
+                                    {% elif report.status == 'REVIEW' %}bg-yellow-100 text-yellow-700
+                                    {% elif report.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-700
+                                    {% elif report.status == 'RESOLVED' %}bg-green-100 text-green-700
+                                    {% else %}bg-red-100 text-red-700{% endif %}">
+                                    {{ report.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location -->
+                    <div class="mt-2 flex items-center flex-wrap text-xs md:text-sm text-gray-500">
+                        <span>📍 {{ report.location|truncatechars:40 }}</span>
+                        {% if report.latitude and report.longitude %}
+                            <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}" 
+                               target="_blank" onclick="event.stopPropagation()" class="ml-2 text-blue-500 text-xs hover:underline">
+                                Map
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Title & Description -->
+                <div class="px-3 md:px-5 pb-2">
+                    <h3 class="text-base md:text-xl font-bold text-gray-800 mb-1 md:mb-2">{{ report.title }}</h3>
+                    <p class="text-gray-700 text-sm md:text-base">{{ report.description|truncatewords:40 }}</p>
+                </div>
+                
+                <!-- Images - Responsive Grid -->
+                {% if report.photos.all %}
+                    <div class="px-3 md:px-5 pb-3">
+                        <div class="grid grid-cols-2 gap-1 md:gap-2">
+                            {% for photo in report.photos.all|slice:":4" %}
+                                <img src="{{ photo.image.url }}" class="w-full h-32 md:h-48 object-cover rounded-lg cursor-pointer hover:opacity-90" 
+                                     onclick="event.stopPropagation(); window.open('{{ photo.image.url }}', '_blank')">
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Footer - Ministry name fully visible -->
+                <div class="px-3 md:px-5 py-2 md:py-3 border-t border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <div class="flex space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">
+                        <span>✅ {{ report.reactions.count }} reactions</span>
+                        <span>💬 {{ report.comments.count }} comments</span>
+                    </div>
+                    <div class="text-xs text-gray-400 break-words max-w-full">
+                        🏛️ {{ report.ministry.name }}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="bg-white rounded-xl shadow-lg p-8 md:p-12 text-center">
+                <p class="text-gray-500 text-base md:text-lg">No reports yet. Be the first to report an issue!</p>
+                <a href="{% url 'submit_report' %}" class="inline-block mt-4 bg-black text-white px-4 md:px-6 py-2 rounded-lg text-sm md:text-base">Submit a Report</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
