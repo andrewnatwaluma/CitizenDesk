@@ -16,6 +16,17 @@ htmlcov/
 *.pot
 *.mo
 *.bak
+*.db
+*.sql
+*.swp
+*.swo
+.DS_Store
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Keep migrations folder but ignore bytecode
 migrations/
-!/migrations/
+!migrations/
 !migrations/__init__.py
+!migrations/*.py
