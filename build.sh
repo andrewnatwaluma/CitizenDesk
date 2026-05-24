@@ -25,9 +25,11 @@ print('Ministries created successfully')
 echo "Creating superuser..."
 python manage.py shell -c "
 from django.contrib.auth.models import User;
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@citizendesk.ug', 'Uganda2026')
-    print('Superuser created')
+if not User.objects.filter(username='andrewnatwaluma').exists():
+    User.objects.create_superuser('andrewnatwaluma', 'andrewnatwaluma@gmail.com', 'uganda2026')
+    print('Superuser created - Username: andrewnatwaluma, Password: uganda2026')
+else:
+    print('Superuser already exists')
 "
 
 echo "Build complete!"
