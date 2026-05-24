@@ -9,7 +9,7 @@ echo "Creating static directory..."
 mkdir -p staticfiles
 
 echo "Collecting static files..."
-python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput --clear
 
 echo "Creating initial ministries..."
 python manage.py shell -c "
