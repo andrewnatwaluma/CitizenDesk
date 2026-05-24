@@ -6,7 +6,7 @@ echo "Running migrations..."
 python manage.py migrate --noinput
 
 echo "Creating static directory..."
-mkdir -p static
+mkdir -p staticfiles
 
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
