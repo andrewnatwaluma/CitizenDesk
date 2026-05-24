@@ -22,12 +22,16 @@ for name in ministries:
 print('Ministries created successfully')
 "
 
-echo "Creating superuser..."
+echo "Creating superuser from environment variables..."
 python manage.py shell -c "
+import os
 from django.contrib.auth.models import User;
-if not User.objects.filter(username='andrewnatwaluma').exists():
-    User.objects.create_superuser('andrewnatwaluma', 'andrewnatwaluma@gmail.com', 'uganda2026')
-    print('Superuser created - Username: andrewnatwaluma, Password: uganda2026')
+username = os.environ.get('SUPERUSER_NAME', 'admin')
+email = os.environ.get('SUPERUSER_EMAIL', 'admin@citizendesk.ug')
+password = os.environ.get('SUPERUSER_PASSWORD', 'admin123')
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username, email, password)
+    print(f'Superuser created - Username: {username}')
 else:
     print('Superuser already exists')
 "
