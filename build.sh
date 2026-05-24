@@ -26,9 +26,9 @@ echo "Creating superuser from environment variables..."
 python manage.py shell -c "
 import os
 from django.contrib.auth.models import User;
-username = os.environ.get('SUPERUSER_NAME', 'admin')
-email = os.environ.get('SUPERUSER_EMAIL', 'admin@citizendesk.ug')
-password = os.environ.get('SUPERUSER_PASSWORD', 'admin123')
+username = os.environ['SUPERUSER_NAME']
+email = os.environ['SUPERUSER_EMAIL']
+password = os.environ['SUPERUSER_PASSWORD']
 if not User.objects.filter(username=username).exists():
     User.objects.create_superuser(username, email, password)
     print(f'Superuser created - Username: {username}')
