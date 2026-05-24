@@ -5,6 +5,12 @@ pip install -r requirements.txt
 echo "Running migrations..."
 python manage.py migrate --noinput
 
+echo "Creating static directory..."
+mkdir -p static
+
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
 echo "Creating initial ministries..."
 python manage.py shell -c "
 from desk.models import Ministry;
@@ -16,7 +22,12 @@ for name in ministries:
 print('Ministries created successfully')
 "
 
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
+echo "Creating superuser..."
+python manage.py shell -c "
+from django.contrib.auth.models import User;
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'admin@citizendesk.ug', 'Uganda2026')
+    print('Superuser created')
+"
 
 echo "Build complete!"
