@@ -80,3 +80,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 os.environ['TZ'] = 'EAT-3'
+
+# Login URL for @login_required decorator
+LOGIN_URL = '/login/'
