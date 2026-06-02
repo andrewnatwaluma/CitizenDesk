@@ -41,7 +41,6 @@ class SignUpForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone_number', 'password1', 'password2']
-        # Username removed - will be auto-generated
 
     def generate_username_suggestions(self, first_name, last_name):
         """Generate available username suggestions"""
@@ -49,11 +48,9 @@ class SignUpForm(UserCreationForm):
         base_username = f"{first_name.lower()}.{last_name.lower()}".replace(" ", "")
         suggestions = []
         
-        # Check if base username is available
         if not User.objects.filter(username=base_username).exists():
             suggestions.append(base_username)
         
-        # Try with numbers
         for i in range(1, 10):
             candidate = f"{base_username}{i}"
             if not User.objects.filter(username=candidate).exists():
@@ -61,7 +58,6 @@ class SignUpForm(UserCreationForm):
             if len(suggestions) >= 3:
                 break
         
-        # If still not enough suggestions, add random numbers
         while len(suggestions) < 3:
             candidate = f"{base_username}{random.randint(10, 999)}"
             if not User.objects.filter(username=candidate).exists():
@@ -76,9 +72,7 @@ class SignUpForm(UserCreationForm):
         
         if first_name and last_name:
             suggestions = self.generate_username_suggestions(first_name, last_name)
-            # Store suggestions in form for template access
             self.username_suggestions = suggestions
-            # Auto-select the first available suggestion
             cleaned_data['username'] = suggestions[0]
         
         return cleaned_data
@@ -96,21 +90,23 @@ class SignUpForm(UserCreationForm):
             raise forms.ValidationError("Passwords don't match")
         return password2
 
-    def _post_clean(self):
-        super(UserCreationForm, self)._post_clean()
-
     def save(self, commit=True):
-        user = super(UserCreationForm, self).save(commit=False)
-        user.email = self.cleaned_data['email']
-        user.first_name = self.cleaned_data['first_name']
-        user.last_name = self.cleaned_data['last_name']
-        user.username = self.cleaned_data.get('username')
+        # Create user instance without saving to DB yet
+        user = User(
+            username=self.cleaned_data['username'],
+            email=self.cleaned_data['email'],
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
+        )
         user.set_password(self.cleaned_data['password1'])
+        
         if commit:
             user.save()
+            # Create or update profile
             profile, created = UserProfile.objects.get_or_create(user=user)
-            profile.phone_number = self.cleaned_data['phone_number']
+            profile.phone_number = self.cleaned_data.get('phone_number', '')
             profile.save()
+        
         return user
 
 class LoginForm(AuthenticationForm):
