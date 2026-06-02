@@ -68,34 +68,47 @@ def login_view(request):
         return redirect('home')
     
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
-        if form.is_valid():
-            email_or_phone = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            
-            # Try to find user by email first
-            user = None
+        email_or_phone = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        print(f"DEBUG: Attempting login with: {email_or_phone}")
+        
+        # Try to find user by email first
+        user = None
+        try:
+            user = User.objects.get(email=email_or_phone)
+            print(f"DEBUG: Found by email: {user.username}")
+        except User.DoesNotExist:
+            print(f"DEBUG: No user found by email: {email_or_phone}")
+            # Try by phone number
             try:
-                user = User.objects.get(email=email_or_phone)
-            except User.DoesNotExist:
-                # If not found by email, try by phone number
+                profile = UserProfile.objects.get(phone_number=email_or_phone)
+                user = profile.user
+                print(f"DEBUG: Found by phone: {user.username}")
+            except UserProfile.DoesNotExist:
+                print(f"DEBUG: No user found by phone: {email_or_phone}")
+                # Try by username
                 try:
-                    profile = UserProfile.objects.get(phone_number=email_or_phone)
-                    user = profile.user
-                except UserProfile.DoesNotExist:
-                    pass
-            
-            if user is not None:
-                user = authenticate(username=user.username, password=password)
-                if user is not None:
-                    login(request, user)
-                    messages.success(request, f'Welcome back {user.username}!')
-                    next_url = request.GET.get('next', 'home')
-                    return redirect(next_url)
-            
-            messages.error(request, 'Invalid email/phone or password.')
+                    user = User.objects.get(username=email_or_phone)
+                    print(f"DEBUG: Found by username: {user.username}")
+                except User.DoesNotExist:
+                    print(f"DEBUG: No user found at all for: {email_or_phone}")
+        
+        if user is not None:
+            print(f"DEBUG: Attempting authenticate for: {user.username}")
+            auth_user = authenticate(username=user.username, password=password)
+            if auth_user is not None:
+                login(request, auth_user)
+                print(f"DEBUG: Login successful for: {user.username}")
+                messages.success(request, f'Welcome back {user.username}!')
+                next_url = request.GET.get('next', 'home')
+                return redirect(next_url)
+            else:
+                print(f"DEBUG: Authentication FAILED for: {user.username}")
+                messages.error(request, 'Invalid password.')
         else:
-            messages.error(request, 'Invalid email/phone or password.')
+            print(f"DEBUG: No user object found")
+            messages.error(request, 'No account found with that email/phone number.')
     else:
         form = LoginForm()
     
