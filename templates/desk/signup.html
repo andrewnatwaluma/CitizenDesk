@@ -3,21 +3,89 @@
 {% block content %}
 <div class="max-w-md mx-auto">
     <div class="bg-white rounded-xl shadow-lg p-8">
-        <h1 class="text-2xl font-bold text-center mb-6">Create Account</h1>
+        <div class="text-center mb-6">
+            <div class="flex justify-center space-x-2 mb-3">
+                <div class="w-10 h-10 bg-black rounded-full"></div>
+                <div class="w-10 h-10 bg-yellow-500 rounded-full"></div>
+                <div class="w-10 h-10 bg-red-600 rounded-full"></div>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Create Account</h1>
+            <p class="text-gray-600 text-sm mt-1">Join CitizenDesk to report issues and engage with government</p>
+        </div>
+
+        {% if form.username_suggestions %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <p class="text-sm font-semibold text-yellow-800 mb-2">✨ Your suggested username:</p>
+            <p class="text-lg font-mono font-bold text-yellow-900">{{ form.username_suggestions.0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">This username will be assigned to you. You can change it later in profile settings.</p>
+        </div>
+        {% endif %}
+
         <form method="POST">
             {% csrf_token %}
-            {% for field in form %}
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-medium mb-2">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            {% endfor %}
-            <button type="submit" class="w-full bg-black text-white font-bold py-2 rounded-lg">Sign Up</button>
+            
+            <!-- First Name -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">First name *</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.first_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Last Name -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Last name *</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.last_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Email -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Email *</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Phone Number -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Phone number (optional)</label>
+                {{ form.phone_number }}
+                {% if form.phone_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.phone_number.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Password -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Password *</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.password1.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Confirm Password -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Confirm password *</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.password2.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-2 rounded-lg transition">
+                Sign Up
+            </button>
         </form>
-        <p class="text-center mt-4 text-sm">Already have an account? <a href="/login/" class="text-yellow-600">Login</a></p>
+        
+        <p class="text-center mt-4 text-sm">
+            Already have an account? <a href="/login/" class="text-yellow-600 hover:underline">Login</a>
+        </p>
     </div>
 </div>
 {% endblock %}
