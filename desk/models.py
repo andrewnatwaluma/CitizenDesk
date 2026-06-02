@@ -23,6 +23,20 @@ class Ministry(models.Model):
     class Meta:
         ordering = ['name']
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50, blank=True, help_text="Emoji or icon code (e.g., 🚗, 💡, 💧)")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.icon} {self.name}" if self.icon else self.name
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
 class Report(models.Model):
     STATUS_CHOICES = [
         ('RECEIVED', '📋 Received'),
@@ -42,6 +56,7 @@ class Report(models.Model):
     location = models.CharField(max_length=300)
     
     ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='reports')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports')
     citizen = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='RECEIVED')

@@ -26,7 +26,7 @@ class SignUpForm(UserCreationForm):
         strip=False,
         widget=forms.PasswordInput(attrs={
             'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500',
-            'placeholder': 'Enter password (any length, any characters)'
+            'placeholder': 'Enter password'
         }),
     )
     password2 = forms.CharField(
@@ -43,7 +43,6 @@ class SignUpForm(UserCreationForm):
         fields = ['first_name', 'last_name', 'email', 'phone_number', 'password1', 'password2']
 
     def generate_username_suggestions(self, first_name, last_name):
-        """Generate available username suggestions"""
         import random
         base_username = f"{first_name.lower()}.{last_name.lower()}".replace(" ", "")
         suggestions = []
@@ -75,6 +74,10 @@ class SignUpForm(UserCreationForm):
             self.username_suggestions = suggestions
             cleaned_data['username'] = suggestions[0]
         
+        email = cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            self.add_error('email', 'A user with this email already exists.')
+        
         return cleaned_data
 
     def clean_password1(self):
@@ -91,21 +94,17 @@ class SignUpForm(UserCreationForm):
         return password2
 
     def save(self, commit=True):
-        # Create user instance without saving to DB yet
-        user = User(
+        user = User.objects.create_user(
             username=self.cleaned_data['username'],
             email=self.cleaned_data['email'],
+            password=self.cleaned_data['password1'],
             first_name=self.cleaned_data['first_name'],
             last_name=self.cleaned_data['last_name'],
         )
-        user.set_password(self.cleaned_data['password1'])
         
-        if commit:
-            user.save()
-            # Create or update profile
-            profile, created = UserProfile.objects.get_or_create(user=user)
-            profile.phone_number = self.cleaned_data.get('phone_number', '')
-            profile.save()
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile.phone_number = self.cleaned_data.get('phone_number', '')
+        profile.save()
         
         return user
 
@@ -137,11 +136,14 @@ class ReportForm(forms.ModelForm):
 
     class Meta:
         model = Report
-        fields = ['title', 'description', 'location', 'ministry', 'privacy', 'latitude', 'longitude']
+        fields = ['title', 'category', 'description', 'location', 'ministry', 'privacy', 'latitude', 'longitude']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500',
                 'placeholder': 'Brief title of your report/request'
+            }),
+            'category': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500',
@@ -173,6 +175,7 @@ class ReportForm(forms.ModelForm):
         }
         labels = {
             'title': 'Title',
+            'category': 'Report Category',
             'description': 'Description',
             'location': 'Location Description',
             'ministry': 'Select Ministry',

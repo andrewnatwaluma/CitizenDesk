@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 from django import forms
-from .models import Ministry, Report, Photo, Reaction, Comment, UserProfile
+from .models import Ministry, Category, Report, Photo, Reaction, Comment, UserProfile
 
 class MinistryForm(forms.ModelForm):
     password = forms.CharField(
@@ -38,6 +38,14 @@ class MinistryAdmin(admin.ModelAdmin):
     has_password.boolean = True
     has_password.short_description = 'Has Password'
 
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'icon', 'is_active', 'created_at']
+    list_filter = ['is_active']
+    search_fields = ['name']
+    list_editable = ['is_active']
+    fields = ['name', 'description', 'icon', 'is_active']
+
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
@@ -67,14 +75,14 @@ class CommentInline(admin.TabularInline):
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ['title', 'ministry', 'citizen', 'status_colored', 'privacy', 'created_at']
-    list_filter = ['status', 'ministry', 'privacy', 'is_security_related']
+    list_display = ['title', 'ministry', 'category', 'citizen', 'status_colored', 'privacy', 'created_at']
+    list_filter = ['status', 'ministry', 'category', 'privacy', 'is_security_related']
     search_fields = ['title', 'description', 'location', 'citizen__username']
     readonly_fields = ['created_at', 'updated_at']
     inlines = [PhotoInline, ReactionInline, CommentInline]
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'description', 'location', 'ministry', 'citizen')
+            'fields': ('title', 'category', 'description', 'location', 'ministry', 'citizen')
         }),
         ('Privacy & Status', {
             'fields': ('privacy', 'status', 'admin_note'),

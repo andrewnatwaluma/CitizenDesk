@@ -9,7 +9,7 @@
         {% elif report.status == 'IN_PROGRESS' %}bg-blue-50 border-l-4 border-blue-500
         {% elif report.status == 'REVIEW' %}bg-yellow-50 border-l-4 border-yellow-500
         {% else %}bg-gray-50 border-l-4 border-gray-500{% endif %}">
-        
+
         <div class="px-4 py-4 md:px-6 md:py-4">
             <div class="flex items-center space-x-2 md:space-x-3 mb-3">
                 {% if report.citizen.profile.profile_picture %}
@@ -30,7 +30,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="text-xs md:text-sm text-gray-500">📍 {{ report.location }}</span>
                     {% if report.latitude and report.longitude %}
-                        <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}" 
+                        <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}"
                            target="_blank" class="text-xs text-blue-500 hover:underline">Map</a>
                     {% endif %}
                 </div>
@@ -51,13 +51,22 @@
                 </div>
             </div>
             <h1 class="text-xl md:text-2xl font-bold text-gray-800 mt-3">{{ report.title }}</h1>
+            
+            <!-- Category Badge -->
+            {% if report.category %}
+                <div class="mt-2">
+                    <div class="inline-block bg-blue-100 px-3 py-1 rounded-full text-sm">
+                        📂 {{ report.category.name }}
+                    </div>
+                </div>
+            {% endif %}
         </div>
-        
+
         <div class="px-4 py-4 md:px-6 md:py-4">
             <h3 class="font-semibold text-gray-700 mb-2 text-sm md:text-base">Description</h3>
             <p class="text-gray-600 whitespace-pre-wrap text-sm md:text-base">{{ report.description }}</p>
         </div>
-        
+
         {% if photos %}
         <div class="px-4 py-4 md:px-6 md:py-4 border-t border-gray-200">
             <div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
@@ -69,7 +78,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if report.admin_note and user.is_staff %}
         <div class="mx-4 mb-4 md:mx-6 md:mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p class="text-sm font-semibold text-blue-700">📝 Admin Note:</p>
@@ -77,7 +86,7 @@
         </div>
         {% endif %}
     </div>
-    
+
     <!-- Reactions Section -->
     <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
         <h3 class="font-bold text-base md:text-lg mb-3 md:mb-4">React to this Report</h3>
@@ -93,7 +102,7 @@
                     <span class="ml-1 text-xs md:text-sm">({{ reactions.ACKNOWLEDGED }})</span>
                 </button>
             </form>
-            
+
             <form method="POST" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="reaction" value="ESCALATED">
@@ -105,7 +114,7 @@
                     <span class="ml-1 text-xs md:text-sm">({{ reactions.ESCALATED }})</span>
                 </button>
             </form>
-            
+
             <form method="POST" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="reaction" value="RESOLVED">
@@ -122,11 +131,11 @@
             <p class="text-xs md:text-sm text-gray-500 mt-3 md:mt-4"><a href="/login/" class="text-yellow-600">Login</a> to react to this report</p>
         {% endif %}
     </div>
-    
+
     <!-- Comments Section -->
     <div class="bg-white rounded-xl shadow-lg p-4 md:p-6">
         <h3 class="font-bold text-base md:text-lg mb-3 md:mb-4">💬 Comments ({{ comments|length }})</h3>
-        
+
         {% if not report.is_comment_locked or 'ministry_id' in request.session %}
             {% if user.is_authenticated or 'ministry_id' in request.session %}
             <div id="comment-form-container" class="mb-6">
@@ -135,7 +144,7 @@
                     <input type="hidden" name="parent_id" id="parent_id" value="">
                     <textarea name="comment_text" id="comment_text" rows="3" class="w-full border border-gray-300 rounded-lg p-2 md:p-3 text-sm md:text-base" placeholder="Write a comment..."></textarea>
                     <div id="reply-indicator" class="hidden text-xs md:text-sm text-yellow-600 mt-1 mb-2">
-                        Replying to <span id="replying-to-name"></span> 
+                        Replying to <span id="replying-to-name"></span>
                         <button type="button" onclick="cancelReply()" class="text-red-500 ml-2">Cancel</button>
                     </div>
                     <button type="submit" class="mt-2 bg-black text-white px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base">Post Comment</button>
@@ -149,7 +158,7 @@
                 <p class="text-sm text-red-600">🔒 This report has been rejected. Comments are closed.</p>
             </div>
         {% endif %}
-        
+
         <div class="space-y-3 md:space-y-4">
             {% for comment in comments %}
                 <div class="border rounded-lg p-3 md:p-4 {% if comment.is_ministry_comment %}bg-yellow-50 border-yellow-300{% endif %}" id="comment-{{ comment.id }}">
@@ -184,7 +193,7 @@
                                     ↩️ Reply
                                 </button>
                             {% endif %}
-                            
+
                             {% if comment.replies.all %}
                                 <div class="mt-2 md:mt-3 pl-3 md:pl-4 border-l-2 border-gray-200 space-y-2 md:space-y-3">
                                     {% for reply in comment.replies.all %}
@@ -218,7 +227,7 @@
             {% endfor %}
         </div>
     </div>
-    
+
     <div class="mt-6 text-center">
         <a href="/" class="text-gray-600 hover:text-yellow-600 text-sm md:text-base">← Back to Feed</a>
     </div>

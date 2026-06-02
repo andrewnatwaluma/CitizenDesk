@@ -12,25 +12,30 @@
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Report an Issue</h1>
             <p class="text-gray-600 text-sm md:text-base mt-1 md:mt-2">Your voice matters. Let us know what needs attention.</p>
         </div>
-        
+
         <form method="POST" enctype="multipart/form-data" class="space-y-4 md:space-y-5">
             {% csrf_token %}
-            
+
             <div>
                 <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">Title *</label>
                 {{ form.title }}
             </div>
-            
+
+            <div>
+                <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">Category *</label>
+                {{ form.category }}
+            </div>
+
             <div>
                 <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">Select Ministry *</label>
                 {{ form.ministry }}
             </div>
-            
+
             <div>
                 <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">Location Description *</label>
                 {{ form.location }}
             </div>
-            
+
             <!-- Privacy Selection -->
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:p-4">
                 <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">Privacy Setting</label>
@@ -40,7 +45,7 @@
                     🔒 Private reports are only visible to the ministry admin dashboard.
                 </p>
             </div>
-            
+
             <!-- GPS Location -->
             <div class="border border-gray-200 rounded-lg p-3 md:p-4">
                 <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">📍 GPS Location (Optional)</label>
@@ -59,12 +64,12 @@
                 </button>
                 <p class="text-xs text-gray-500 mt-1 md:mt-2">Your device location will be used to pinpoint the issue on a map.</p>
             </div>
-            
+
             <div>
                 <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">Description *</label>
                 {{ form.description }}
             </div>
-            
+
             <div>
                 <label class="block text-gray-700 font-semibold text-sm md:text-base mb-1 md:mb-2">Upload Photos (up to 3)</label>
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-3 md:p-4 text-center">
@@ -74,12 +79,12 @@
                     <input type="file" name="photo3" accept="image/*" class="block w-full text-xs md:text-sm">
                 </div>
             </div>
-            
+
             <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-2 md:py-3 rounded-lg transition text-sm md:text-base">
                 📤 Submit Report
             </button>
         </form>
-        
+
         <div class="mt-4 md:mt-6 text-center text-xs md:text-sm text-gray-500">
             <p>Your report will be assigned a tracking ID. You can follow its progress.</p>
         </div>
