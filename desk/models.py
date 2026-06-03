@@ -138,9 +138,31 @@ class Comment(models.Model):
         ordering = ['-is_ministry_comment', 'created_at']
 
 class UserProfile(models.Model):
+    SEX_CHOICES = [
+        ('MALE', 'Male'),
+        ('FEMALE', 'Female'),
+        ('OTHER', 'Other'),
+        ('PREFER_NOT_TO_SAY', 'Prefer not to say'),
+    ]
+    
+    REGION_CHOICES = [
+        ('CENTRAL', 'Central'),
+        ('EASTERN', 'Eastern'),
+        ('NORTHERN', 'Northern'),
+        ('WESTERN', 'Western'),
+        ('KAMPALA', 'Kampala'),
+        ('OTHER', 'Other'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pics/%Y/%m/%d/', blank=True, null=True)
+    
+    # Demographic fields
+    date_of_birth = models.DateField(null=True, blank=True)
+    sex = models.CharField(max_length=20, choices=SEX_CHOICES, blank=True, null=True)
+    region_of_origin = models.CharField(max_length=20, choices=REGION_CHOICES, blank=True, null=True)
+    region_of_residence = models.CharField(max_length=20, choices=REGION_CHOICES, blank=True, null=True)
     
     def __str__(self):
         return f"{self.user.username} - {self.phone_number or 'no phone'}"
@@ -148,4 +170,10 @@ class UserProfile(models.Model):
     def get_profile_picture_url(self):
         if self.profile_picture:
             return self.profile_picture.url
+        return None
+    
+    def get_age(self):
+        if self.date_of_birth:
+            today = timezone.now().date()
+            return today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
         return None

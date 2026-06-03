@@ -16,4 +16,7 @@ urlpatterns = [
     path('dashboard/', views.ministry_dashboard, name='ministry_dashboard'),
     path('update-status/<int:report_id>/', views.update_status, name='update_status'),
     path('react/<int:report_id>/', views.add_reaction, name='add_reaction'),
+    path('statistics/', views.statistics_dashboard, name='statistics'),
+    path('map/', views.map_view, name='map_view'),
+    path('demographics/', views.demographics_view, name='demographics'),
 ]

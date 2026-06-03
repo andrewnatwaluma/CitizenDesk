@@ -1,0 +1,75 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div class="flex justify-between items-center flex-wrap gap-4">
+            <div>
+                <h1 class="text-2xl font-bold">👥 Citizen Demographics</h1>
+                <p class="text-gray-600">Demographic insights about citizens reporting to your ministry</p>
+            </div>
+            <div class="text-sm bg-gray-100 px-4 py-2 rounded-lg">
+                📊 Total Reports: {{ total_reports }}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Gender Distribution - Pie Chart -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👥 Gender Distribution</h2>
+            <canvas id="genderChart" width="400" height="400"></canvas>
+        </div>
+
+        <!-- Region Distribution - Bar Chart -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📍 Region Distribution</h2>
+            <canvas id="regionChart" width="400" height="400"></canvas>
+        </div>
+
+        <!-- Age Distribution - Bar Chart -->
+        <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-2">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Age Distribution</h2>
+            <canvas id="ageChart" width="800" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Gender Chart
+    const genderCtx = document.getElementById('genderChart').getContext('2d');
+    const genderLabels = [{% for label, count in gender_counts.items %}{% if count > 0 %}'{{ label }}',{% endif %}{% endfor %}];
+    const genderData = [{% for label, count in gender_counts.items %}{% if count > 0 %}{{ count }},{% endif %}{% endfor %}];
+    new Chart(genderCtx, {
+        type: 'pie',
+        data: { labels: genderLabels, datasets: [{ data: genderData, backgroundColor: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B'] }] }
+    });
+
+    // Region Chart
+    const regionCtx = document.getElementById('regionChart').getContext('2d');
+    const regionLabels = [{% for name, count in region_counts.items %}'{{ name }}',{% endfor %}];
+    const regionData = [{% for name, count in region_counts.items %}{{ count }},{% endfor %}];
+    new Chart(regionCtx, {
+        type: 'bar',
+        data: {
+            labels: regionLabels,
+            datasets: [{ label: 'Number of Citizens', data: regionData, backgroundColor: '#10B981', borderRadius: 8 }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    // Age Chart
+    const ageCtx = document.getElementById('ageChart').getContext('2d');
+    const ageLabels = [{% for range, count in age_ranges.items %}'{{ range }}',{% endfor %}];
+    const ageData = [{% for range, count in age_ranges.items %}{{ count }},{% endfor %}];
+    new Chart(ageCtx, {
+        type: 'bar',
+        data: {
+            labels: ageLabels,
+            datasets: [{ label: 'Number of Citizens', data: ageData, backgroundColor: '#F59E0B', borderRadius: 8 }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+</script>
+{% endblock %}

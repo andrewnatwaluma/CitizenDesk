@@ -18,8 +18,7 @@
 </head>
 <body class="font-sans">
     <div class="flag-stripes"></div>
-    
-    <!-- Navigation - Mobile Responsive -->
+
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-3 md:px-4 py-2 md:py-3">
             <div class="flex flex-wrap justify-between items-center">
@@ -31,20 +30,20 @@
                     </div>
                     <a href="/" class="text-xl md:text-2xl font-bold text-gray-800">Citizen<span class="text-yellow-600">Desk</span></a>
                 </div>
-                
+
                 <div class="flex flex-wrap items-center gap-2 md:gap-4 mt-2 sm:mt-0">
                     <a href="/" class="text-sm md:text-base text-gray-600 hover:text-yellow-600 transition">🏠 Feed</a>
-                    
+
                     {% if 'ministry_id' in request.session %}
-                        <!-- Ministry Logged In -->
                         <a href="/dashboard/" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">📊 Ministry Dashboard</a>
                         <a href="/ministry/logout/" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">🚪 Ministry Logout</a>
-                        
+
                     {% elif user.is_authenticated %}
-                        <!-- Citizen Logged In -->
                         <a href="/submit/" class="bg-black hover:bg-gray-800 text-white px-2 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">📝 New Report</a>
                         {% if user.is_staff %}
                             <a href="/dashboard/" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">📊 Admin</a>
+                            <a href="/statistics/" class="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">📈 Statistics</a>
+                            <a href="/map/" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">🗺️ Map</a>
                         {% endif %}
                         <div class="relative dropdown">
                             <button class="flex items-center space-x-1 md:space-x-2 focus:outline-none">
@@ -72,9 +71,8 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                     {% else %}
-                        <!-- Not Logged In -->
                         <a href="/login/" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">Login</a>
                         <a href="/signup/" class="bg-black hover:bg-gray-800 text-white px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">Sign Up</a>
                         <a href="/ministry/login/" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition">🏛️ Ministry</a>
@@ -83,7 +81,7 @@
             </div>
         </div>
     </nav>
-    
+
     {% if messages %}
         <div class="container mx-auto px-3 md:px-4 mt-3 md:mt-4">
             {% for message in messages %}
@@ -93,19 +91,19 @@
             {% endfor %}
         </div>
     {% endif %}
-    
+
     <main class="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {% block content %}
         {% endblock %}
     </main>
-    
+
     <footer class="bg-gray-900 text-white mt-8 md:mt-12 py-4 md:py-6">
         <div class="container mx-auto px-3 md:px-4 text-center">
             <p class="text-gray-400 text-xs md:text-sm">🇺🇬 CitizenDesk — See Something, Say Something, Solve Something</p>
             <p class="text-gray-500 text-xs mt-1 md:mt-2">A prototype for the National Innovator Registry | Ministry of ICT & National Guidance</p>
         </div>
     </footer>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const dropdownBtn = document.querySelector('.dropdown button');

@@ -1,0 +1,118 @@
+{% extends 'desk/base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">📊 Report Statistics</h1>
+        <p class="text-gray-600">Overview of all citizen reports and user demographics</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-sm opacity-90">Total Reports</p>
+            <p class="text-4xl font-bold">{{ total_reports }}</p>
+        </div>
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-sm opacity-90">Resolved Reports</p>
+            <p class="text-4xl font-bold">{{ status_counts.Received|default:0 }}</p>
+        </div>
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-sm opacity-90">In Progress</p>
+            <p class="text-4xl font-bold">{{ status_counts.In_Progress|default:0 }}</p>
+        </div>
+        <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-sm opacity-90">Rejected</p>
+            <p class="text-4xl font-bold">{{ status_counts.Rejected|default:0 }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Reports by Status</h2>
+            <canvas id="statusChart" width="400" height="400"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🏷️ Reports by Category</h2>
+            <canvas id="categoryChart" width="400" height="400"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🏛️ Reports by Ministry</h2>
+            <canvas id="ministryChart" width="400" height="400"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🗺️ Reports by Region</h2>
+            <canvas id="regionChart" width="400" height="400"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-2">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📈 Reports Over Time (Last 30 Days)</h2>
+            <canvas id="timeChart" width="800" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Status Pie Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusLabels = [{% for label, count in status_counts.items %}'{{ label }}',{% endfor %}];
+const statusData = [{% for label, count in status_counts.items %}{{ count }},{% endfor %}];
+new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+        labels: statusLabels,
+        datasets: [{ data: statusData, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#6B7280', '#EF4444', '#8B5CF6'] }]
+    }
+});
+
+// Category Bar Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+const categoryLabels = [{% for name, count in category_counts.items %}'{{ name }}',{% endfor %}];
+const categoryData = [{% for name, count in category_counts.items %}{{ count }},{% endfor %}];
+new Chart(categoryCtx, {
+    type: 'bar',
+    data: {
+        labels: categoryLabels,
+        datasets: [{ label: 'Number of Reports', data: categoryData, backgroundColor: '#3B82F6', borderRadius: 8 }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+});
+
+// Ministry Bar Chart
+const ministryCtx = document.getElementById('ministryChart').getContext('2d');
+const ministryLabels = [{% for name, count in ministry_counts.items %}'{{ name|truncatechars:20 }}',{% endfor %}];
+const ministryData = [{% for name, count in ministry_counts.items %}{{ count }},{% endfor %}];
+new Chart(ministryCtx, {
+    type: 'bar',
+    data: {
+        labels: ministryLabels,
+        datasets: [{ label: 'Number of Reports', data: ministryData, backgroundColor: '#10B981', borderRadius: 8 }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+});
+
+// Region Pie Chart
+const regionCtx = document.getElementById('regionChart').getContext('2d');
+const regionLabels = [{% for name, count in region_counts.items %}'{{ name }}',{% endfor %}];
+const regionData = [{% for name, count in region_counts.items %}{{ count }},{% endfor %}];
+new Chart(regionCtx, {
+    type: 'pie',
+    data: {
+        labels: regionLabels,
+        datasets: [{ data: regionData, backgroundColor: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#6B7280'] }]
+    }
+});
+
+// Time Line Chart
+const timeCtx = document.getElementById('timeChart').getContext('2d');
+const timeLabels = [{% for item in date_counts %}'{{ item.date }}',{% endfor %}];
+const timeData = [{% for item in date_counts %}{{ item.count }},{% endfor %}];
+new Chart(timeCtx, {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [{ label: 'Reports Submitted', data: timeData, borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.3, fill: true }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+});
+</script>
+{% endblock %}

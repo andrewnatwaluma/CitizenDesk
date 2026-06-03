@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db import models
 from django.db.models import Count, Q
+from datetime import datetime, timedelta
 from .models import Ministry, Report, Photo, Reaction, Comment, UserProfile
 from .forms import ReportForm, SignUpForm, LoginForm, ProfileUpdateForm
 
@@ -66,34 +67,31 @@ def signup_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
-    
+
     if request.method == 'POST':
         email_or_phone = request.POST.get('username')
         password = request.POST.get('password')
-        
+
         print(f"DEBUG: Attempting login with: {email_or_phone}")
-        
-        # Try to find user by email first
+
         user = None
         try:
             user = User.objects.get(email=email_or_phone)
             print(f"DEBUG: Found by email: {user.username}")
         except User.DoesNotExist:
             print(f"DEBUG: No user found by email: {email_or_phone}")
-            # Try by phone number
             try:
                 profile = UserProfile.objects.get(phone_number=email_or_phone)
                 user = profile.user
                 print(f"DEBUG: Found by phone: {user.username}")
             except UserProfile.DoesNotExist:
                 print(f"DEBUG: No user found by phone: {email_or_phone}")
-                # Try by username
                 try:
                     user = User.objects.get(username=email_or_phone)
                     print(f"DEBUG: Found by username: {user.username}")
                 except User.DoesNotExist:
                     print(f"DEBUG: No user found at all for: {email_or_phone}")
-        
+
         if user is not None:
             print(f"DEBUG: Attempting authenticate for: {user.username}")
             auth_user = authenticate(username=user.username, password=password)
@@ -111,7 +109,7 @@ def login_view(request):
             messages.error(request, 'No account found with that email/phone number.')
     else:
         form = LoginForm()
-    
+
     return render(request, 'desk/login.html', {'form': form})
 
 def logout_view(request):
@@ -328,6 +326,45 @@ def ministry_dashboard(request):
     if status_filter:
         reports = reports.filter(status=status_filter)
 
+    demographic_data = {}
+    if is_ministry_admin:
+        gender_counts = {
+            'Male': UserProfile.objects.filter(sex='MALE').count(),
+            'Female': UserProfile.objects.filter(sex='FEMALE').count(),
+            'Other': UserProfile.objects.filter(sex='OTHER').count(),
+            'Prefer not to say': UserProfile.objects.filter(sex='PREFER_NOT_TO_SAY').count(),
+        }
+        region_counts = {}
+        for region_code, region_name in UserProfile.REGION_CHOICES:
+            count = UserProfile.objects.filter(region_of_residence=region_code).count()
+            if count > 0:
+                region_counts[region_name] = count
+        
+        status_counts = {}
+        for status_code, status_label in Report.STATUS_CHOICES:
+            count = reports.filter(status=status_code).count()
+            if count > 0:
+                clean_label = status_label.replace('📋 ', '').replace('✅ ', '').replace('❌ ', '').replace('🔍 ', '').replace('🔄 ', '').strip()
+                status_counts[clean_label] = count
+        
+        date_counts = []
+        for i in range(30):
+            date = datetime.now().date() - timedelta(days=i)
+            count = reports.filter(created_at__date=date).count()
+            if count > 0 or i < 7:
+                date_counts.append({
+                    'date': date.strftime('%Y-%m-%d'),
+                    'count': count
+                })
+        
+        demographic_data = {
+            'gender_counts': gender_counts,
+            'region_counts': region_counts,
+            'status_counts': status_counts,
+            'date_counts': date_counts[::-1],
+            'total_reports': reports.count(),
+        }
+
     context = {
         'reports': reports,
         'ministries': ministries,
@@ -335,6 +372,7 @@ def ministry_dashboard(request):
         'selected_status': status_filter,
         'status_choices': Report.STATUS_CHOICES,
         'is_ministry_admin': is_ministry_admin,
+        'demographic_data': demographic_data,
     }
     return render(request, 'desk/ministry_dashboard.html', context)
 
@@ -363,3 +401,175 @@ def update_status(request, report_id):
     if 'ministry_id' in request.session:
         return redirect('ministry_dashboard')
     return redirect('admin_dashboard')
+
+def statistics_dashboard(request):
+    """Display statistics - accessible to ministry sessions and staff"""
+    from .models import Category
+    
+    if 'ministry_id' in request.session:
+        ministry_id = request.session['ministry_id']
+        try:
+            ministry = Ministry.objects.get(id=ministry_id)
+            reports = Report.objects.filter(ministry=ministry)
+            is_ministry_admin = True
+        except Ministry.DoesNotExist:
+            messages.error(request, 'Ministry session expired.')
+            return redirect('ministry_login')
+    elif request.user.is_authenticated and request.user.is_staff:
+        reports = Report.objects.all()
+        is_ministry_admin = False
+        ministry = None
+    else:
+        messages.error(request, 'Access denied. Please login as ministry or admin.')
+        return redirect('ministry_login')
+    
+    total_reports = reports.count()
+    
+    status_counts = {}
+    for status_code, status_label in Report.STATUS_CHOICES:
+        count = reports.filter(status=status_code).count()
+        if count > 0:
+            clean_label = status_label.replace('📋 ', '').replace('✅ ', '').replace('❌ ', '').replace('🔍 ', '').replace('🔄 ', '').strip()
+            status_counts[clean_label] = count
+    
+    category_counts = {}
+    for category in Category.objects.filter(is_active=True):
+        count = reports.filter(category=category).count()
+        if count > 0:
+            category_counts[category.name] = count
+    
+    ministry_counts = {}
+    for ministry_obj in Ministry.objects.all():
+        count = reports.filter(ministry=ministry_obj).count()
+        if count > 0:
+            ministry_counts[ministry_obj.name] = count
+    
+    region_counts = {}
+    for region_code, region_name in UserProfile.REGION_CHOICES:
+        count = UserProfile.objects.filter(region_of_residence=region_code).count()
+        if count > 0:
+            region_counts[region_name] = count
+    
+    date_counts = []
+    for i in range(30):
+        date = datetime.now().date() - timedelta(days=i)
+        count = reports.filter(created_at__date=date).count()
+        if count > 0 or i < 7:
+            date_counts.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'count': count
+            })
+    
+    context = {
+        'total_reports': total_reports,
+        'status_counts': status_counts,
+        'category_counts': category_counts,
+        'ministry_counts': ministry_counts,
+        'region_counts': region_counts,
+        'date_counts': date_counts[::-1],
+        'is_ministry_admin': is_ministry_admin,
+    }
+    return render(request, 'desk/statistics.html', context)
+
+def map_view(request):
+    """Display map with heat signatures of reports - accessible to ministry sessions and staff"""
+    if 'ministry_id' in request.session:
+        ministry_id = request.session['ministry_id']
+        try:
+            ministry = Ministry.objects.get(id=ministry_id)
+            reports = Report.objects.filter(ministry=ministry, latitude__isnull=False, longitude__isnull=False)
+            is_ministry_admin = True
+        except Ministry.DoesNotExist:
+            messages.error(request, 'Ministry session expired.')
+            return redirect('ministry_login')
+    elif request.user.is_authenticated and request.user.is_staff:
+        reports = Report.objects.filter(latitude__isnull=False, longitude__isnull=False)
+        is_ministry_admin = False
+        ministry = None
+    else:
+        messages.error(request, 'Access denied. Please login as ministry or admin.')
+        return redirect('ministry_login')
+    
+    heatmap_data = []
+    for report in reports:
+        heatmap_data.append({
+            'lat': float(report.latitude),
+            'lng': float(report.longitude),
+            'intensity': 1,
+            'title': report.title,
+            'id': report.id,
+            'status': report.get_status_display(),
+            'created_at': report.created_at.strftime('%Y-%m-%d'),
+        })
+    
+    context = {
+        'heatmap_data': heatmap_data,
+        'is_ministry_admin': is_ministry_admin,
+        'ministry': ministry,
+        'total_reports': reports.count(),
+    }
+    return render(request, 'desk/map_view.html', context)
+
+def demographics_view(request):
+    """Display demographics - accessible to ministry sessions and staff"""
+    if 'ministry_id' in request.session:
+        ministry_id = request.session['ministry_id']
+        try:
+            ministry = Ministry.objects.get(id=ministry_id)
+            reports = Report.objects.filter(ministry=ministry)
+            is_ministry_admin = True
+        except Ministry.DoesNotExist:
+            messages.error(request, 'Ministry session expired.')
+            return redirect('ministry_login')
+    elif request.user.is_authenticated and request.user.is_staff:
+        reports = Report.objects.all()
+        is_ministry_admin = False
+        ministry = None
+    else:
+        messages.error(request, 'Access denied. Please login as ministry or admin.')
+        return redirect('ministry_login')
+    
+    total_reports = reports.count()
+    
+    gender_counts = {
+        'Male': UserProfile.objects.filter(sex='MALE').count(),
+        'Female': UserProfile.objects.filter(sex='FEMALE').count(),
+        'Other': UserProfile.objects.filter(sex='OTHER').count(),
+        'Prefer not to say': UserProfile.objects.filter(sex='PREFER_NOT_TO_SAY').count(),
+    }
+    
+    region_counts = {}
+    for region_code, region_name in UserProfile.REGION_CHOICES:
+        count = UserProfile.objects.filter(region_of_residence=region_code).count()
+        if count > 0:
+            region_counts[region_name] = count
+    
+    age_ranges = {
+        'Under 18': 0,
+        '18-25': 0,
+        '26-35': 0,
+        '36-50': 0,
+        '50+': 0,
+    }
+    for profile in UserProfile.objects.all():
+        age = profile.get_age()
+        if age:
+            if age < 18:
+                age_ranges['Under 18'] += 1
+            elif age <= 25:
+                age_ranges['18-25'] += 1
+            elif age <= 35:
+                age_ranges['26-35'] += 1
+            elif age <= 50:
+                age_ranges['36-50'] += 1
+            else:
+                age_ranges['50+'] += 1
+    
+    context = {
+        'total_reports': total_reports,
+        'gender_counts': gender_counts,
+        'region_counts': region_counts,
+        'age_ranges': age_ranges,
+        'is_ministry_admin': is_ministry_admin,
+    }
+    return render(request, 'desk/demographics.html', context)

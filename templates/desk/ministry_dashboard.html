@@ -8,12 +8,20 @@
                 <h1 class="text-2xl font-bold">📊 Ministry Dashboard</h1>
                 <p class="text-gray-600">Manage and update citizen reports</p>
             </div>
-            <div class="text-sm text-gray-500">
-                Logged in as: <strong>{{ user.username }}</strong>
+            <div class="flex gap-3 flex-wrap">
+                <a href="/map/" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
+                    🗺️ View Heatmap
+                </a>
+                <a href="/statistics/" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+                    📈 Statistics
+                </a>
+                <a href="/demographics/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                    👥 Citizen Demographics
+                </a>
             </div>
         </div>
     </div>
-    
+
     <!-- Filters -->
     <div class="bg-white rounded-xl shadow-lg p-5 mb-6">
         <div class="flex flex-wrap gap-4 items-center">
@@ -22,7 +30,7 @@
                 <select onchange="window.location.href=this.value" class="ml-2 border rounded-lg px-3 py-1">
                     <option value="?{% if selected_status %}status={{ selected_status }}{% endif %}">All Ministries</option>
                     {% for m in ministries %}
-                        <option value="?ministry={{ m.id }}{% if selected_status %}&status={{ selected_status }}{% endif %}" 
+                        <option value="?ministry={{ m.id }}{% if selected_status %}&status={{ selected_status }}{% endif %}"
                                 {% if selected_ministry|add:0 == m.id %}selected{% endif %}>
                             {{ m.name }}
                         </option>
@@ -46,9 +54,9 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Reports Table -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gray-800 text-white">

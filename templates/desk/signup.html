@@ -23,7 +23,7 @@
 
         <form method="POST">
             {% csrf_token %}
-            
+
             <!-- First Name -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">First name *</label>
@@ -32,7 +32,7 @@
                     <p class="text-red-500 text-sm mt-1">{{ form.first_name.errors.0 }}</p>
                 {% endif %}
             </div>
-            
+
             <!-- Last Name -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">Last name *</label>
@@ -41,7 +41,7 @@
                     <p class="text-red-500 text-sm mt-1">{{ form.last_name.errors.0 }}</p>
                 {% endif %}
             </div>
-            
+
             <!-- Email -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">Email *</label>
@@ -50,7 +50,7 @@
                     <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
                 {% endif %}
             </div>
-            
+
             <!-- Phone Number -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">Phone number (optional)</label>
@@ -59,7 +59,43 @@
                     <p class="text-red-500 text-sm mt-1">{{ form.phone_number.errors.0 }}</p>
                 {% endif %}
             </div>
-            
+
+            <!-- Date of Birth -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Date of Birth (optional)</label>
+                {{ form.date_of_birth }}
+                {% if form.date_of_birth.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.date_of_birth.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Sex -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Gender (optional)</label>
+                {{ form.sex }}
+                {% if form.sex.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.sex.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Region of Origin -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Region of Origin (optional)</label>
+                {{ form.region_of_origin }}
+                {% if form.region_of_origin.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.region_of_origin.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Region of Residence -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Region of Residence (optional)</label>
+                {{ form.region_of_residence }}
+                {% if form.region_of_residence.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.region_of_residence.errors.0 }}</p>
+                {% endif %}
+            </div>
+
             <!-- Password -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">Password *</label>
@@ -68,7 +104,7 @@
                     <p class="text-red-500 text-sm mt-1">{{ form.password1.errors.0 }}</p>
                 {% endif %}
             </div>
-            
+
             <!-- Confirm Password -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">Confirm password *</label>
@@ -77,12 +113,12 @@
                     <p class="text-red-500 text-sm mt-1">{{ form.password2.errors.0 }}</p>
                 {% endif %}
             </div>
-            
+
             <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-2 rounded-lg transition">
                 Sign Up
             </button>
         </form>
-        
+
         <p class="text-center mt-4 text-sm">
             Already have an account? <a href="/login/" class="text-yellow-600 hover:underline">Login</a>
         </p>

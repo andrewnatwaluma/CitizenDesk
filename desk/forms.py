@@ -20,6 +20,37 @@ class SignUpForm(UserCreationForm):
         'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500',
         'placeholder': 'Last name'
     }))
+    
+    # Demographic fields
+    date_of_birth = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500',
+            'type': 'date',
+            'placeholder': 'YYYY-MM-DD'
+        })
+    )
+    sex = forms.ChoiceField(
+        choices=[('', 'Select gender')] + list(UserProfile.SEX_CHOICES),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'
+        })
+    )
+    region_of_origin = forms.ChoiceField(
+        choices=[('', 'Select region of origin')] + list(UserProfile.REGION_CHOICES),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'
+        })
+    )
+    region_of_residence = forms.ChoiceField(
+        choices=[('', 'Select region of residence')] + list(UserProfile.REGION_CHOICES),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'
+        })
+    )
 
     password1 = forms.CharField(
         label="Password",
@@ -40,7 +71,7 @@ class SignUpForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone_number', 'password1', 'password2']
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'date_of_birth', 'sex', 'region_of_origin', 'region_of_residence', 'password1', 'password2']
 
     def generate_username_suggestions(self, first_name, last_name):
         import random
@@ -104,6 +135,10 @@ class SignUpForm(UserCreationForm):
         
         profile, created = UserProfile.objects.get_or_create(user=user)
         profile.phone_number = self.cleaned_data.get('phone_number', '')
+        profile.date_of_birth = self.cleaned_data.get('date_of_birth')
+        profile.sex = self.cleaned_data.get('sex')
+        profile.region_of_origin = self.cleaned_data.get('region_of_origin')
+        profile.region_of_residence = self.cleaned_data.get('region_of_residence')
         profile.save()
         
         return user
@@ -201,6 +236,36 @@ class ProfileUpdateForm(forms.ModelForm):
     profile_picture = forms.ImageField(required=False, widget=forms.FileInput(attrs={
         'class': 'w-full text-sm text-gray-500 file:mr-2 file:py-1 file:px-3 md:file:mr-4 md:file:py-2 md:file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100'
     }))
+    
+    # Demographic fields for profile update
+    date_of_birth = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500',
+            'type': 'date'
+        })
+    )
+    sex = forms.ChoiceField(
+        choices=[('', 'Select gender')] + list(UserProfile.SEX_CHOICES),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'
+        })
+    )
+    region_of_origin = forms.ChoiceField(
+        choices=[('', 'Select region of origin')] + list(UserProfile.REGION_CHOICES),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'
+        })
+    )
+    region_of_residence = forms.ChoiceField(
+        choices=[('', 'Select region of residence')] + list(UserProfile.REGION_CHOICES),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'
+        })
+    )
 
     class Meta:
         model = User
@@ -211,6 +276,10 @@ class ProfileUpdateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.user and hasattr(self.user, 'profile'):
             self.fields['phone_number'].initial = self.user.profile.phone_number
+            self.fields['date_of_birth'].initial = self.user.profile.date_of_birth
+            self.fields['sex'].initial = self.user.profile.sex
+            self.fields['region_of_origin'].initial = self.user.profile.region_of_origin
+            self.fields['region_of_residence'].initial = self.user.profile.region_of_residence
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -218,6 +287,10 @@ class ProfileUpdateForm(forms.ModelForm):
             user.save()
             profile, created = UserProfile.objects.get_or_create(user=user)
             profile.phone_number = self.cleaned_data.get('phone_number')
+            profile.date_of_birth = self.cleaned_data.get('date_of_birth')
+            profile.sex = self.cleaned_data.get('sex')
+            profile.region_of_origin = self.cleaned_data.get('region_of_origin')
+            profile.region_of_residence = self.cleaned_data.get('region_of_residence')
             if self.cleaned_data.get('profile_picture'):
                 profile.profile_picture = self.cleaned_data.get('profile_picture')
             profile.save()
