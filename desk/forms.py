@@ -21,7 +21,6 @@ class SignUpForm(UserCreationForm):
         'placeholder': 'Last name'
     }))
     
-    # Demographic fields
     date_of_birth = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={
@@ -219,12 +218,11 @@ class ReportForm(forms.ModelForm):
             'longitude': 'GPS Longitude',
         }
 
-    # File upload validation - images only, max 5MB
+    # File upload validation - simplified to avoid corrupting images
     def clean_photo1(self):
         photo = self.cleaned_data.get('photo1')
         if photo:
-            if not photo.content_type.startswith('image/'):
-                raise forms.ValidationError('Only image files are allowed.')
+            # Only check file size, skip content type validation
             if photo.size > 5 * 1024 * 1024:
                 raise forms.ValidationError('Image size must be less than 5MB.')
         return photo
@@ -232,8 +230,6 @@ class ReportForm(forms.ModelForm):
     def clean_photo2(self):
         photo = self.cleaned_data.get('photo2')
         if photo:
-            if not photo.content_type.startswith('image/'):
-                raise forms.ValidationError('Only image files are allowed.')
             if photo.size > 5 * 1024 * 1024:
                 raise forms.ValidationError('Image size must be less than 5MB.')
         return photo
@@ -241,8 +237,6 @@ class ReportForm(forms.ModelForm):
     def clean_photo3(self):
         photo = self.cleaned_data.get('photo3')
         if photo:
-            if not photo.content_type.startswith('image/'):
-                raise forms.ValidationError('Only image files are allowed.')
             if photo.size > 5 * 1024 * 1024:
                 raise forms.ValidationError('Image size must be less than 5MB.')
         return photo
@@ -265,7 +259,6 @@ class ProfileUpdateForm(forms.ModelForm):
         'class': 'w-full text-sm text-gray-500 file:mr-2 file:py-1 file:px-3 md:file:mr-4 md:file:py-2 md:file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100'
     }))
     
-    # Demographic fields for profile update
     date_of_birth = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={
