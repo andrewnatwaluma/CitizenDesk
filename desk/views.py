@@ -209,6 +209,10 @@ def submit_report(request):
 
 def report_detail(request, report_id):
     report = get_object_or_404(Report, id=report_id)
+    
+    # Increment view count
+    report.views += 1
+    report.save()
 
     if report.privacy == 'PRIVATE' and report.citizen != request.user and not request.user.is_staff and 'ministry_id' not in request.session:
         messages.error(request, 'This report is private.')

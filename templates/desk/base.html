@@ -6,10 +6,16 @@
     <title>CitizenDesk 🇺🇬 | Your Voice, Government Action</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; }
+        body { background: #ffffff; min-height: 100vh; }
         .flag-stripes { background: linear-gradient(90deg, #000000 0%, #000000 33%, #F5A623 33%, #F5A623 66%, #D0021B 66%, #D0021B 100%); height: 4px; }
         .card-hover:hover { transform: translateY(-2px); transition: all 0.3s ease; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
         .dropdown:hover .dropdown-menu { display: block; }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
         @media (max-width: 768px) {
             .container { padding-left: 12px; padding-right: 12px; }
             body { font-size: 14px; }

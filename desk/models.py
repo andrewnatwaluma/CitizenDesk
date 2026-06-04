@@ -72,6 +72,7 @@ class Report(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     admin_note = models.TextField(blank=True)
+    views = models.IntegerField(default=0)
     
     def __str__(self):
         return f"{self.title} - {self.citizen.username}"
@@ -133,9 +134,6 @@ class Comment(models.Model):
         if self.is_ministry_comment and self.ministry:
             return f"Ministry {self.ministry.name}: {self.text[:50]}"
         return f"Comment by {self.citizen.username if self.citizen else 'Unknown'}"
-    
-    class Meta:
-        ordering = ['-is_ministry_comment', 'created_at']
 
 class UserProfile(models.Model):
     SEX_CHOICES = [
@@ -158,7 +156,6 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pics/%Y/%m/%d/', blank=True, null=True)
     
-    # Demographic fields
     date_of_birth = models.DateField(null=True, blank=True)
     sex = models.CharField(max_length=20, choices=SEX_CHOICES, blank=True, null=True)
     region_of_origin = models.CharField(max_length=20, choices=REGION_CHOICES, blank=True, null=True)
