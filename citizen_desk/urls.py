@@ -8,9 +8,12 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('desk.urls')),  # All CitizenDesk URLs will be in the desk app
+    path('', include('desk.urls')),
 ]
 
-# Serve media files during development (user uploaded images)
+# Serve media files in both development and production
 if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # For production (Render), media files are served from MEDIA_ROOT
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
