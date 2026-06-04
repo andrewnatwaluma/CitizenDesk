@@ -9,9 +9,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-citizendesk-uganda-2026-makerthe1st'
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*', '.onrender.com']
+ALLOWED_HOSTS = ['*', '.onrender.com', 'citizendesk-sm8f.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -83,3 +83,8 @@ os.environ['TZ'] = 'EAT-3'
 
 # Login URL for @login_required decorator
 LOGIN_URL = '/login/'
+
+# Session security - timeout after 1 hour
+SESSION_COOKIE_AGE = 3600
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

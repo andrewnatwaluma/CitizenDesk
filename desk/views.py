@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.db import models
 from django.db.models import Count, Q
 from datetime import datetime, timedelta
-from .models import Ministry, Report, Photo, Reaction, Comment, UserProfile
+from .models import Ministry, Report, Photo, Reaction, Comment, UserProfile, LoginAttempt
 from .forms import ReportForm, SignUpForm, LoginForm, ProfileUpdateForm
 
 def home(request):
@@ -67,13 +67,30 @@ def signup_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
-
+    
+    # Get client IP address
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip_address = x_forwarded_for.split(',')[0]
+    else:
+        ip_address = request.META.get('REMOTE_ADDR')
+    
     if request.method == 'POST':
         email_or_phone = request.POST.get('username')
         password = request.POST.get('password')
-
+        
+        # Check if IP is locked out
+        try:
+            attempt = LoginAttempt.objects.get(ip_address=ip_address, username=email_or_phone)
+            if attempt.locked_until and attempt.locked_until > datetime.now():
+                remaining = (attempt.locked_until - datetime.now()).seconds // 60
+                messages.error(request, f'Too many failed attempts. Try again in {remaining} minutes.')
+                return render(request, 'desk/login.html', {'form': LoginForm()})
+        except LoginAttempt.DoesNotExist:
+            pass
+        
         print(f"DEBUG: Attempting login with: {email_or_phone}")
-
+        
         user = None
         try:
             user = User.objects.get(email=email_or_phone)
@@ -91,7 +108,7 @@ def login_view(request):
                     print(f"DEBUG: Found by username: {user.username}")
                 except User.DoesNotExist:
                     print(f"DEBUG: No user found at all for: {email_or_phone}")
-
+        
         if user is not None:
             print(f"DEBUG: Attempting authenticate for: {user.username}")
             auth_user = authenticate(username=user.username, password=password)
@@ -99,17 +116,37 @@ def login_view(request):
                 login(request, auth_user)
                 print(f"DEBUG: Login successful for: {user.username}")
                 messages.success(request, f'Welcome back {user.username}!')
+                # Clear any failed attempts on successful login
+                LoginAttempt.objects.filter(ip_address=ip_address, username=email_or_phone).delete()
                 next_url = request.GET.get('next', 'home')
                 return redirect(next_url)
             else:
                 print(f"DEBUG: Authentication FAILED for: {user.username}")
+                # Record failed attempt
+                attempt, created = LoginAttempt.objects.get_or_create(
+                    ip_address=ip_address,
+                    username=email_or_phone
+                )
+                attempt.attempts += 1
+                if attempt.attempts >= 5:
+                    attempt.locked_until = datetime.now() + timedelta(minutes=15)
+                attempt.save()
                 messages.error(request, 'Invalid password.')
         else:
             print(f"DEBUG: No user object found")
+            # Record failed attempt for non-existent user
+            attempt, created = LoginAttempt.objects.get_or_create(
+                ip_address=ip_address,
+                username=email_or_phone
+            )
+            attempt.attempts += 1
+            if attempt.attempts >= 5:
+                attempt.locked_until = datetime.now() + timedelta(minutes=15)
+            attempt.save()
             messages.error(request, 'No account found with that email/phone number.')
     else:
         form = LoginForm()
-
+    
     return render(request, 'desk/login.html', {'form': form})
 
 def logout_view(request):

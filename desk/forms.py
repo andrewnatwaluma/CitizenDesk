@@ -219,6 +219,34 @@ class ReportForm(forms.ModelForm):
             'longitude': 'GPS Longitude',
         }
 
+    # File upload validation - images only, max 5MB
+    def clean_photo1(self):
+        photo = self.cleaned_data.get('photo1')
+        if photo:
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('Only image files are allowed.')
+            if photo.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Image size must be less than 5MB.')
+        return photo
+
+    def clean_photo2(self):
+        photo = self.cleaned_data.get('photo2')
+        if photo:
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('Only image files are allowed.')
+            if photo.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Image size must be less than 5MB.')
+        return photo
+
+    def clean_photo3(self):
+        photo = self.cleaned_data.get('photo3')
+        if photo:
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('Only image files are allowed.')
+            if photo.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Image size must be less than 5MB.')
+        return photo
+
 class ProfileUpdateForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={
         'class': 'w-full px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500'

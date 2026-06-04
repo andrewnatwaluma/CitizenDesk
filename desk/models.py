@@ -174,3 +174,16 @@ class UserProfile(models.Model):
             today = timezone.now().date()
             return today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
         return None
+
+class LoginAttempt(models.Model):
+    ip_address = models.GenericIPAddressField()
+    username = models.CharField(max_length=150)
+    attempts = models.IntegerField(default=1)
+    last_attempt = models.DateTimeField(auto_now=True)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['ip_address', 'username']
+    
+    def __str__(self):
+        return f"{self.ip_address} - {self.username} - {self.attempts} attempts"
