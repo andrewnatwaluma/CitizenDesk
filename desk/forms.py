@@ -218,11 +218,12 @@ class ReportForm(forms.ModelForm):
             'longitude': 'GPS Longitude',
         }
 
-    # File upload validation - simplified to avoid corrupting images
+    # Original strict validation - content type + size
     def clean_photo1(self):
         photo = self.cleaned_data.get('photo1')
         if photo:
-            # Only check file size, skip content type validation
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('Only image files are allowed.')
             if photo.size > 5 * 1024 * 1024:
                 raise forms.ValidationError('Image size must be less than 5MB.')
         return photo
@@ -230,6 +231,8 @@ class ReportForm(forms.ModelForm):
     def clean_photo2(self):
         photo = self.cleaned_data.get('photo2')
         if photo:
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('Only image files are allowed.')
             if photo.size > 5 * 1024 * 1024:
                 raise forms.ValidationError('Image size must be less than 5MB.')
         return photo
@@ -237,6 +240,8 @@ class ReportForm(forms.ModelForm):
     def clean_photo3(self):
         photo = self.cleaned_data.get('photo3')
         if photo:
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('Only image files are allowed.')
             if photo.size > 5 * 1024 * 1024:
                 raise forms.ValidationError('Image size must be less than 5MB.')
         return photo

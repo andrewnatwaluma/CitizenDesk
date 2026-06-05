@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password, check_password
+from desk.storage import CloudinaryStorage
 
 class Ministry(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -95,7 +96,7 @@ class Report(models.Model):
 
 class Photo(models.Model):
     report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='photos')
-    image = models.ImageField(upload_to='report_photos/%Y/%m/%d/')
+    image = models.ImageField(upload_to='report_photos/%Y/%m/%d/', storage=CloudinaryStorage())
     caption = models.CharField(max_length=200, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
@@ -154,7 +155,7 @@ class UserProfile(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='profile_pics/%Y/%m/%d/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/%Y/%m/%d/', blank=True, null=True, storage=CloudinaryStorage())
     
     date_of_birth = models.DateField(null=True, blank=True)
     sex = models.CharField(max_length=20, choices=SEX_CHOICES, blank=True, null=True)

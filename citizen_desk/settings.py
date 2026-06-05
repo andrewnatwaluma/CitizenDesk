@@ -4,6 +4,9 @@ Django settings for citizen_desk project.
 
 from pathlib import Path
 import os
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'desk',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -68,23 +72,34 @@ TIME_ZONE = 'Africa/Nairobi'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files (user uploaded images)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Cloudinary configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dk0819tep',
+    'API_KEY': '795811162426142',
+    'API_SECRET': '2sKqzwkHVqmoiMCGWPnni2juc08',
+}
+
+cloudinary.config(
+    cloud_name='dk0819tep',
+    api_key='795811162426142',
+    api_secret='2sKqzwkHVqmoiMCGWPnni2juc08'
+)
+
+# Use custom Cloudinary storage for media files
+DEFAULT_FILE_STORAGE = 'desk.storage.CloudinaryStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 os.environ['TZ'] = 'EAT-3'
 
-# Login URL for @login_required decorator
 LOGIN_URL = '/login/'
 
-# Session security - timeout after 1 hour
+# Session security
 SESSION_COOKIE_AGE = 3600
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

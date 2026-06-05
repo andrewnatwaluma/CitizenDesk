@@ -11,9 +11,6 @@ urlpatterns = [
     path('', include('desk.urls')),
 ]
 
-# Serve media files in both development and production
+# Serve media files only when DEBUG=True (Django's default)
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    # For production (Render), media files are served from MEDIA_ROOT
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
