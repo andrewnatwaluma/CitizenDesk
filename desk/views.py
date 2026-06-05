@@ -89,39 +89,29 @@ def login_view(request):
         except LoginAttempt.DoesNotExist:
             pass
         
-        print(f"DEBUG: Attempting login with: {email_or_phone}")
-        
         user = None
         try:
             user = User.objects.get(email=email_or_phone)
-            print(f"DEBUG: Found by email: {user.username}")
         except User.DoesNotExist:
-            print(f"DEBUG: No user found by email: {email_or_phone}")
             try:
                 profile = UserProfile.objects.get(phone_number=email_or_phone)
                 user = profile.user
-                print(f"DEBUG: Found by phone: {user.username}")
             except UserProfile.DoesNotExist:
-                print(f"DEBUG: No user found by phone: {email_or_phone}")
                 try:
                     user = User.objects.get(username=email_or_phone)
-                    print(f"DEBUG: Found by username: {user.username}")
                 except User.DoesNotExist:
-                    print(f"DEBUG: No user found at all for: {email_or_phone}")
+                    pass
         
         if user is not None:
-            print(f"DEBUG: Attempting authenticate for: {user.username}")
             auth_user = authenticate(username=user.username, password=password)
             if auth_user is not None:
                 login(request, auth_user)
-                print(f"DEBUG: Login successful for: {user.username}")
                 messages.success(request, f'Welcome back {user.username}!')
                 # Clear any failed attempts on successful login
                 LoginAttempt.objects.filter(ip_address=ip_address, username=email_or_phone).delete()
                 next_url = request.GET.get('next', 'home')
                 return redirect(next_url)
             else:
-                print(f"DEBUG: Authentication FAILED for: {user.username}")
                 # Record failed attempt
                 attempt, created = LoginAttempt.objects.get_or_create(
                     ip_address=ip_address,
@@ -131,9 +121,9 @@ def login_view(request):
                 if attempt.attempts >= 5:
                     attempt.locked_until = datetime.now() + timedelta(minutes=15)
                 attempt.save()
-                messages.error(request, 'Invalid password.')
+                messages.error(request, 'Invalid password. Please try again.')
+                return render(request, 'desk/login.html', {'form': LoginForm()})
         else:
-            print(f"DEBUG: No user object found")
             # Record failed attempt for non-existent user
             attempt, created = LoginAttempt.objects.get_or_create(
                 ip_address=ip_address,
@@ -143,11 +133,10 @@ def login_view(request):
             if attempt.attempts >= 5:
                 attempt.locked_until = datetime.now() + timedelta(minutes=15)
             attempt.save()
-            messages.error(request, 'No account found with that email/phone number.')
-    else:
-        form = LoginForm()
+            messages.error(request, 'No account found with that email/phone number. Please sign up first.')
+            return render(request, 'desk/login.html', {'form': LoginForm()})
     
-    return render(request, 'desk/login.html', {'form': form})
+    return render(request, 'desk/login.html', {'form': LoginForm()})
 
 def logout_view(request):
     logout(request)
