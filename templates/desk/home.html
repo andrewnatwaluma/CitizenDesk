@@ -50,7 +50,7 @@
                  {% elif report.status == 'REVIEW' %}bg-yellow-50
                  {% else %}bg-gray-50{% endif %}">
 
-                <!-- TOP SECTION (1/3 height) -->
+                <!-- TOP SECTION - Twitter style: Profile pic on left, content on right -->
                 <div class="relative p-3 md:p-5">
                     <!-- Status Badge - Fixed at Top Right -->
                     <div class="absolute top-3 right-3 md:top-5 md:right-5 z-10">
@@ -64,9 +64,9 @@
                         </span>
                     </div>
 
-                    <!-- Profile Row -->
-                    <div class="flex items-start gap-2 md:gap-3 pr-24">
-                        <!-- Profile Picture -->
+                    <!-- Twitter-style row: Profile pic alone on left, content on right -->
+                    <div class="flex gap-2 md:gap-3 pr-24">
+                        <!-- Profile Picture - Alone on left -->
                         <div class="flex-shrink-0">
                             <a href="{% url 'public_profile' report.citizen.id %}" onclick="event.stopPropagation()">
                                 {% if report.citizen.profile.profile_picture %}
@@ -79,8 +79,9 @@
                             </a>
                         </div>
 
-                        <!-- Name, Username, Date -->
+                        <!-- Right column: All text content (name, username, date, location, title, description) -->
                         <div class="flex-1 min-w-0">
+                            <!-- Name, Username, Date -->
                             <div class="flex flex-wrap items-center gap-1 md:gap-2">
                                 <a href="{% url 'public_profile' report.citizen.id %}" class="font-semibold text-gray-800 hover:text-yellow-600 text-sm md:text-base" onclick="event.stopPropagation()">
                                     {{ report.citizen.first_name }} {{ report.citizen.last_name }}
@@ -91,41 +92,41 @@
                                     <span class="text-xs text-purple-600">🔒</span>
                                 {% endif %}
                             </div>
+
+                            <!-- Location -->
+                            <div class="mt-1 flex items-center flex-wrap text-xs md:text-sm text-gray-500">
+                                <span>📍 {{ report.location|truncatechars:40 }}</span>
+                                {% if report.latitude and report.longitude %}
+                                    <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}"
+                                       target="_blank" onclick="event.stopPropagation()" class="ml-2 text-blue-500 text-xs hover:underline">
+                                        Map
+                                    </a>
+                                {% endif %}
+                            </div>
+
+                            <!-- Title -->
+                            <div class="mt-2" onclick="window.location.href='{% url 'report_detail' report.id %}'">
+                                <h3 class="text-base md:text-xl font-bold text-gray-800 hover:text-yellow-600 cursor-pointer">
+                                    {{ report.title }}
+                                </h3>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mt-1" onclick="window.location.href='{% url 'report_detail' report.id %}'">
+                                <p class="text-gray-600 text-sm md:text-base line-clamp-2 cursor-pointer">
+                                    {{ report.description }}
+                                </p>
+                                {% if report.description|length > 100 %}
+                                    <span class="text-yellow-600 text-sm hover:underline cursor-pointer">
+                                        See more →
+                                    </span>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Location -->
-                    <div class="mt-2 flex items-center flex-wrap text-xs md:text-sm text-gray-500">
-                        <span>📍 {{ report.location|truncatechars:40 }}</span>
-                        {% if report.latitude and report.longitude %}
-                            <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}"
-                               target="_blank" onclick="event.stopPropagation()" class="ml-2 text-blue-500 text-xs hover:underline">
-                                Map
-                            </a>
-                        {% endif %}
-                    </div>
-
-                    <!-- Title -->
-                    <div class="mt-2" onclick="window.location.href='{% url 'report_detail' report.id %}'">
-                        <h3 class="text-base md:text-xl font-bold text-gray-800 hover:text-yellow-600 cursor-pointer">
-                            {{ report.title }}
-                        </h3>
-                    </div>
-
-                    <!-- Description -->
-                    <div class="mt-1" onclick="window.location.href='{% url 'report_detail' report.id %}'">
-                        <p class="text-gray-600 text-sm md:text-base line-clamp-2 cursor-pointer">
-                            {{ report.description }}
-                        </p>
-                        {% if report.description|length > 100 %}
-                            <span class="text-yellow-600 text-sm hover:underline cursor-pointer">
-                                See more →
-                            </span>
-                        {% endif %}
                     </div>
                 </div>
 
-                <!-- IMAGES SECTION (2/3 height) - Takes up more space -->
+                <!-- IMAGES SECTION (2/3 height) -->
                 {% if report.photos.all %}
                     <div class="px-3 md:px-5 pb-3" onclick="window.location.href='{% url 'report_detail' report.id %}'">
                         <div class="grid grid-cols-2 gap-1 md:gap-2">
@@ -139,22 +140,22 @@
                     </div>
                 {% endif %}
 
-                <!-- BOTTOM SECTION - Category (left) and Ministry (right) -->
+                <!-- BOTTOM SECTION - Ministry (left), Category (right) -->
                 <div class="px-3 md:px-5 py-2 md:py-3 border-t border-gray-100 flex justify-between items-center">
-                    <div class="text-xs text-gray-500">
-                        {% if report.category %}
-                            📂 {{ report.category.name }}
-                        {% else %}
-                            <span class="invisible">No category</span>
-                        {% endif %}
+                    <div class="text-xs text-gray-400">
+                        🏛️ {{ report.ministry.name }}
                     </div>
                     <div class="flex space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">
                         <span>👁️ {{ report.views }} views</span>
                         <span>👍 {{ report.reactions.count }} reactions</span>
                         <span>💬 {{ report.comments.count }} comments</span>
                     </div>
-                    <div class="text-xs text-gray-400">
-                        🏛️ {{ report.ministry.name }}
+                    <div class="text-xs text-gray-500">
+                        {% if report.category %}
+                            📂 {{ report.category.name }}
+                        {% else %}
+                            <span class="invisible">No category</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
