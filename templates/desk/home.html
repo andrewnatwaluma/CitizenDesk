@@ -126,21 +126,52 @@
                     </div>
                 </div>
 
-                <!-- IMAGES SECTION - Below text, aligned with right column -->
-                {% if report.photos.all %}
-                    <div class="pl-16 md:pl-20 pr-3 md:pr-5 pb-3" onclick="window.location.href='{% url 'report_detail' report.id %}'">
-                        <div class="grid grid-cols-2 gap-1 md:gap-2">
-                            {% for photo in report.photos.all|slice:":4" %}
-                                <div class="relative" style="padding-bottom: 75%;">
-                                    <img src="{{ photo.image.url }}" class="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90"
-                                         onclick="event.stopPropagation(); window.open('{{ photo.image.url }}', '_blank')">
+                <!-- IMAGES SECTION - Dynamic Grid -->
+                {% with photos=report.photos.all|slice:":3" %}
+                    {% if photos %}
+                        <div class="pl-16 md:pl-20 pr-3 md:pr-5 pb-3">
+                            {% if photos|length == 1 %}
+                                <!-- 1 image: full size portrait -->
+                                <div class="relative" style="padding-bottom: 100%;">
+                                    <img src="{{ photos.0.image.url }}" class="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90"
+                                         onclick="event.stopPropagation(); window.open('{{ photos.0.image.url }}', '_blank')">
                                 </div>
-                            {% endfor %}
+                            {% elif photos|length == 2 %}
+                                <!-- 2 images: side by side, portrait mode -->
+                                <div class="grid grid-cols-2 gap-1 md:gap-2">
+                                    {% for photo in photos %}
+                                        <div class="relative" style="padding-bottom: 100%;">
+                                            <img src="{{ photo.image.url }}" class="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90"
+                                                 onclick="event.stopPropagation(); window.open('{{ photo.image.url }}', '_blank')">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% elif photos|length == 3 %}
+                                <!-- 3 images: left 50% full height, right two stacked 25% each -->
+                                <div class="grid grid-cols-2 gap-1 md:gap-2">
+                                    <!-- Left image - 50% width, full height -->
+                                    <div class="relative" style="padding-bottom: 100%;">
+                                        <img src="{{ photos.0.image.url }}" class="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90"
+                                             onclick="event.stopPropagation(); window.open('{{ photos.0.image.url }}', '_blank')">
+                                    </div>
+                                    <!-- Right column - two stacked images -->
+                                    <div class="flex flex-col gap-1 md:gap-2">
+                                        <div class="relative" style="padding-bottom: 48%;">
+                                            <img src="{{ photos.1.image.url }}" class="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90"
+                                                 onclick="event.stopPropagation(); window.open('{{ photos.1.image.url }}', '_blank')">
+                                        </div>
+                                        <div class="relative" style="padding-bottom: 48%;">
+                                            <img src="{{ photos.2.image.url }}" class="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90"
+                                                 onclick="event.stopPropagation(); window.open('{{ photos.2.image.url }}', '_blank')">
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
-                    </div>
-                {% endif %}
+                    {% endif %}
+                {% endwith %}
 
-                <!-- BOTTOM SECTION - Ministry (left), Category (right) - Aligned with right column -->
+                <!-- BOTTOM SECTION - Ministry (left), Category (right) -->
                 <div class="pl-16 md:pl-20 pr-3 md:pr-5 pt-2 pb-1">
                     <div class="flex justify-between items-center">
                         <div class="text-xs text-gray-400">
@@ -156,7 +187,7 @@
                     </div>
                 </div>
 
-                <!-- STATS SECTION - Centered, aligned with right column -->
+                <!-- STATS SECTION - Centered -->
                 <div class="pl-16 md:pl-20 pr-3 md:pr-5 pb-3 pt-1">
                     <div class="flex justify-center space-x-4 md:space-x-6 text-xs md:text-sm text-gray-500">
                         <span>👁️ {{ report.views }} views</span>
