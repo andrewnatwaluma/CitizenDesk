@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-citizendesk-uganda-2026-makerthe1st'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*', '.onrender.com', 'citizendesk-sm8f.onrender.com']
 
