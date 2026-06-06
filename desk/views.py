@@ -51,10 +51,14 @@ def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, f'Welcome {user.first_name}! You are now signed up.')
-            return redirect('home')
+            try:
+                user = form.save()
+                login(request, user)
+                messages.success(request, f'Welcome {user.first_name}! You are now signed up.')
+                return redirect('home')
+            except Exception as e:
+                messages.error(request, f'Signup failed: {str(e)}')
+                return render(request, 'desk/signup.html', {'form': form})
         else:
             for field, errors in form.errors.items():
                 for error in errors:
