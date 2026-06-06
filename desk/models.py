@@ -178,13 +178,13 @@ class UserProfile(models.Model):
 
 class LoginAttempt(models.Model):
     ip_address = models.GenericIPAddressField()
-    username = models.CharField(max_length=150)
+    username_or_phone = models.CharField(max_length=150)  # Changed from 'username' to 'username_or_phone'
     attempts = models.IntegerField(default=1)
     last_attempt = models.DateTimeField(auto_now=True)
     locked_until = models.DateTimeField(null=True, blank=True)
     
     class Meta:
-        unique_together = ['ip_address', 'username']
+        unique_together = ['ip_address', 'username_or_phone']
     
     def __str__(self):
-        return f"{self.ip_address} - {self.username} - {self.attempts} attempts"
+        return f"{self.ip_address} - {self.username_or_phone} - {self.attempts} attempts"
