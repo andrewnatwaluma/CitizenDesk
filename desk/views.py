@@ -83,16 +83,19 @@ def login_view(request):
         email_or_phone = request.POST.get('username')
         password = request.POST.get('password')
         
-        # Check if IP is locked out
+        # Check if IP is locked out - using username_or_phone
         try:
-            attempt = LoginAttempt.objects.get(ip_address=ip_address, username=email_or_phone)
+            attempt = LoginAttempt.objects.get(ip_address=ip_address, username_or_phone=email_or_phone)
             if attempt.locked_until and attempt.locked_until > datetime.now():
                 remaining = (attempt.locked_until - datetime.now()).seconds // 60
                 messages.error(request, f'Too many failed attempts. Try again in {remaining} minutes.')
                 return render(request, 'desk/login.html', {'form': LoginForm()})
         except LoginAttempt.DoesNotExist:
             pass
+        except Exception as e:
+            print(f"LoginAttempt error: {e}")
         
+        # Find user by email, phone, or username
         user = None
         try:
             user = User.objects.get(email=email_or_phone)
@@ -111,32 +114,41 @@ def login_view(request):
             if auth_user is not None:
                 login(request, auth_user)
                 messages.success(request, f'Welcome back {user.username}!')
-                # Clear any failed attempts on successful login
-                LoginAttempt.objects.filter(ip_address=ip_address, username=email_or_phone).delete()
+                # Clear any failed attempts on successful login - using username_or_phone
+                try:
+                    LoginAttempt.objects.filter(ip_address=ip_address, username_or_phone=email_or_phone).delete()
+                except Exception as e:
+                    print(f"Failed to clear attempts: {e}")
                 next_url = request.GET.get('next', 'home')
                 return redirect(next_url)
             else:
-                # Record failed attempt
+                # Record failed attempt - using username_or_phone
+                try:
+                    attempt, created = LoginAttempt.objects.get_or_create(
+                        ip_address=ip_address,
+                        username_or_phone=email_or_phone
+                    )
+                    attempt.attempts += 1
+                    if attempt.attempts >= 5:
+                        attempt.locked_until = datetime.now() + timedelta(minutes=15)
+                    attempt.save()
+                except Exception as e:
+                    print(f"Failed to record attempt: {e}")
+                messages.error(request, 'Invalid password. Please try again.')
+                return render(request, 'desk/login.html', {'form': LoginForm()})
+        else:
+            # Record failed attempt for non-existent user - using username_or_phone
+            try:
                 attempt, created = LoginAttempt.objects.get_or_create(
                     ip_address=ip_address,
-                    username=email_or_phone
+                    username_or_phone=email_or_phone
                 )
                 attempt.attempts += 1
                 if attempt.attempts >= 5:
                     attempt.locked_until = datetime.now() + timedelta(minutes=15)
                 attempt.save()
-                messages.error(request, 'Invalid password. Please try again.')
-                return render(request, 'desk/login.html', {'form': LoginForm()})
-        else:
-            # Record failed attempt for non-existent user
-            attempt, created = LoginAttempt.objects.get_or_create(
-                ip_address=ip_address,
-                username=email_or_phone
-            )
-            attempt.attempts += 1
-            if attempt.attempts >= 5:
-                attempt.locked_until = datetime.now() + timedelta(minutes=15)
-            attempt.save()
+            except Exception as e:
+                print(f"Failed to record attempt: {e}")
             messages.error(request, 'No account found with that email/phone number. Please sign up first.')
             return render(request, 'desk/login.html', {'form': LoginForm()})
     
