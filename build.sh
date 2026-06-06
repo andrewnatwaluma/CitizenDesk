@@ -2,14 +2,14 @@
 echo "Installing dependencies..."
 pip install -r requirements.txt
 
-echo "Running migrations..."
+echo "Running migrations on Render..."
 python manage.py migrate --noinput
 
 echo "Creating static directory..."
 mkdir -p staticfiles
 
 echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear
+python manage.py collectstatic --noinput
 
 echo "Creating initial ministries..."
 python manage.py shell -c "
@@ -26,9 +26,9 @@ echo "Creating superuser from environment variables..."
 python manage.py shell -c "
 import os
 from django.contrib.auth.models import User;
-username = os.environ['SUPERUSER_NAME']
-email = os.environ['SUPERUSER_EMAIL']
-password = os.environ['SUPERUSER_PASSWORD']
+username = os.environ.get('SUPERUSER_NAME')
+email = os.environ.get('SUPERUSER_EMAIL')
+password = os.environ.get('SUPERUSER_PASSWORD')
 if not User.objects.filter(username=username).exists():
     User.objects.create_superuser(username, email, password)
     print(f'Superuser created - Username: {username}')
