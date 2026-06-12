@@ -77,17 +77,17 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Cloudinary configuration (from environment variables)
+# Cloudinary configuration (from environment variables - NO FALLBACKS)
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'dk0819tep'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '795811162426142'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', '2sKqzwkHVqmoiMCGWPnni2juc08'),
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
 cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dk0819tep'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY', '795811162426142'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET', '2sKqzwkHVqmoiMCGWPnni2juc08')
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
 )
 
 # Use custom Cloudinary storage for media files
